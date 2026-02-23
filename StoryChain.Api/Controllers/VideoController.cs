@@ -37,7 +37,9 @@ namespace StoryChain.Api.Controllers
         [EnableRateLimiting("VideoUploadPolicy")]
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload([FromForm] UploadVideoRequest req)
+        public async Task<IActionResult> Upload(
+            [FromForm] UploadVideoRequest req
+        )
         {
             if (req.File == null || req.File.Length == 0)
                 return BadRequest("File is empty");
@@ -82,7 +84,7 @@ namespace StoryChain.Api.Controllers
             }
 
             // ===========================
-            // CREATE VIDEO ENTITY
+            // CREATE VIDEO
             // ===========================
             var video = new Video
             {
@@ -108,7 +110,7 @@ namespace StoryChain.Api.Controllers
             await _db.SaveChangesAsync();
 
             // ===========================
-            // HANDLE PARENT NODE
+            // HANDLE PARENT
             // ===========================
             StoryNode? parent = null;
 
