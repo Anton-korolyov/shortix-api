@@ -41,6 +41,7 @@ namespace StoryChain.Api.Controllers
             [FromForm] UploadVideoRequest req
         )
         {
+            Console.WriteLine("start upload");
             try
             {
                 if (req.File == null || req.File.Length == 0)
@@ -82,6 +83,7 @@ namespace StoryChain.Api.Controllers
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine(  ex.Message);
                     return StatusCode(500, "Upload failed: " + ex.Message);
                 }
 
