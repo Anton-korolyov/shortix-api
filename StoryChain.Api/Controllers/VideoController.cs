@@ -41,117 +41,124 @@ namespace StoryChain.Api.Controllers
             [FromForm] UploadVideoRequest req
         )
         {
-            if (req.File == null || req.File.Length == 0)
-                return BadRequest("File is empty");
-
-            if (req.File.Length > 20 * 1024 * 1024)
-                return BadRequest("File too large (max 20MB)");
-
-            var allowedExtensions = new[] { ".mp4", ".mov", ".webm" };
-            var ext = Path.GetExtension(req.File.FileName).ToLower();
-
-            if (!allowedExtensions.Contains(ext))
-                return BadRequest("Invalid video format");
-
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
-
-            // ===========================
-            // CHECK CATEGORY
-            // ===========================
-            var category = await _db.VideoCategories
-                .FirstOrDefaultAsync(c => c.Id == req.VideoCategoryId);
-
-            if (category == null)
-                return BadRequest("Invalid category");
-
-            // ===========================
-            // UPLOAD TO R2
-            // ===========================
-            var fileName = $"{Guid.NewGuid()}{ext}";
-            var key = $"videos/{fileName}";
-
-            string videoUrl;
-
             try
             {
-                videoUrl = await _r2.UploadAsync(req.File, key);
+                if (req.File == null || req.File.Length == 0)
+                    return BadRequest("File is empty");
+
+                if (req.File.Length > 20 * 1024 * 1024)
+                    return BadRequest("File too large (max 20MB)");
+
+                var allowedExtensions = new[] { ".mp4", ".mov", ".webm" };
+                var ext = Path.GetExtension(req.File.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(ext))
+                    return BadRequest("Invalid video format");
+
+                var userId = Guid.Parse(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier)!
+                );
+
+                // ===========================
+                // CHECK CATEGORY
+                // ===========================
+                var category = await _db.VideoCategories
+                    .FirstOrDefaultAsync(c => c.Id == req.VideoCategoryId);
+
+                if (category == null)
+                    return BadRequest("Invalid category");
+
+                // ===========================
+                // UPLOAD TO R2
+                // ===========================
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var key = $"videos/{fileName}";
+
+                string videoUrl;
+
+                try
+                {
+                    videoUrl = await _r2.UploadAsync(req.File, key);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, "Upload failed: " + ex.Message);
+                }
+
+                // ===========================
+                // CREATE VIDEO
+                // ===========================
+                var video = new Video
+                {
+                    UserId = userId,
+                    Url = videoUrl,
+                    VideoCategoryId = req.VideoCategoryId,
+                    Processing = false,
+                    IsDeleted = false
+                };
+
+                if (req.Tags != null && req.Tags.Any())
+                {
+                    foreach (var t in req.Tags.Distinct())
+                    {
+                        video.Tags.Add(new VideoTag
+                        {
+                            Tag = t.ToLower().Trim()
+                        });
+                    }
+                }
+
+                _db.Videos.Add(video);
+                await _db.SaveChangesAsync();
+
+                // ===========================
+                // HANDLE PARENT
+                // ===========================
+                StoryNode? parent = null;
+
+                if (req.ParentNodeId != null)
+                {
+                    parent = await _db.StoryNodes
+                        .FirstOrDefaultAsync(n => n.Id == req.ParentNodeId);
+
+                    if (parent == null)
+                        return BadRequest("Parent not found");
+
+                    var childrenCount = await _db.StoryNodes
+                        .CountAsync(n => n.ParentNodeId == parent.Id);
+
+                    if (childrenCount >= MAX_BRANCHES)
+                        return BadRequest("Branch limit reached");
+                }
+
+                // ===========================
+                // CREATE STORY NODE
+                // ===========================
+                var node = new StoryNode
+                {
+                    StoryId = parent == null
+                        ? Guid.NewGuid()
+                        : parent.StoryId,
+
+                    VideoId = video.Id,
+                    ParentNodeId = req.ParentNodeId,
+                    Depth = parent == null ? 0 : parent.Depth + 1
+                };
+
+                _db.StoryNodes.Add(node);
+                await _db.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    videoId = video.Id,
+                    nodeId = node.Id,
+                    url = video.Url
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Upload failed: " + ex.Message);
+                return StatusCode(500, "An error occurred: " + ex.Message);
             }
-
-            // ===========================
-            // CREATE VIDEO
-            // ===========================
-            var video = new Video
-            {
-                UserId = userId,
-                Url = videoUrl,
-                VideoCategoryId = req.VideoCategoryId,
-                Processing = false,
-                IsDeleted = false
-            };
-
-            if (req.Tags != null && req.Tags.Any())
-            {
-                foreach (var t in req.Tags.Distinct())
-                {
-                    video.Tags.Add(new VideoTag
-                    {
-                        Tag = t.ToLower().Trim()
-                    });
-                }
-            }
-
-            _db.Videos.Add(video);
-            await _db.SaveChangesAsync();
-
-            // ===========================
-            // HANDLE PARENT
-            // ===========================
-            StoryNode? parent = null;
-
-            if (req.ParentNodeId != null)
-            {
-                parent = await _db.StoryNodes
-                    .FirstOrDefaultAsync(n => n.Id == req.ParentNodeId);
-
-                if (parent == null)
-                    return BadRequest("Parent not found");
-
-                var childrenCount = await _db.StoryNodes
-                    .CountAsync(n => n.ParentNodeId == parent.Id);
-
-                if (childrenCount >= MAX_BRANCHES)
-                    return BadRequest("Branch limit reached");
-            }
-
-            // ===========================
-            // CREATE STORY NODE
-            // ===========================
-            var node = new StoryNode
-            {
-                StoryId = parent == null
-                    ? Guid.NewGuid()
-                    : parent.StoryId,
-
-                VideoId = video.Id,
-                ParentNodeId = req.ParentNodeId,
-                Depth = parent == null ? 0 : parent.Depth + 1
-            };
-
-            _db.StoryNodes.Add(node);
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                videoId = video.Id,
-                nodeId = node.Id,
-                url = video.Url
-            });
         }
 
         // ===========================
