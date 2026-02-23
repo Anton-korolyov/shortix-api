@@ -54,8 +54,7 @@
               "RelativeToolTip": "StoryChain.Api\\Services\\JwtService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T19:51:03.477Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T19:51:03.477Z"
             },
             {
               "$type": "Document",
@@ -77,7 +76,7 @@
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\VideoController.cs",
               "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\VideoController.cs",
               "RelativeToolTip": "StoryChain.Api\\Controllers\\VideoController.cs",
-              "ViewState": "AgIAAKIAAAAAAAAAAIAwwLAAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAI4AAAAAAAAAAAAuwKAAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-23T18:48:03.245Z",
               "EditorCaption": ""
@@ -116,8 +115,7 @@
               "RelativeToolTip": "StoryChain.Api\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-02-23T11:36:22.35Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T11:36:22.35Z"
             }
           ]
         }

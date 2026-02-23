@@ -157,6 +157,8 @@ namespace StoryChain.Api.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine("UPLOAD ENDPOINT HIT");
+                Console.WriteLine("UPLOAD ENDPOINT HIT" + ex.Message);
                 return StatusCode(500, "An error occurred: " + ex.Message);
             }
         }
