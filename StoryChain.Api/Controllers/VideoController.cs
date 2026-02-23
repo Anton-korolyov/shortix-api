@@ -16,15 +16,18 @@ namespace StoryChain.Api.Controllers
     {
         private readonly AppDbContext _db;
         private readonly VideoJobQueue _queue;
+        private readonly R2StorageService _r2;
 
         private const int MAX_BRANCHES = 5;
 
         public VideoController(
             AppDbContext db,
-            VideoJobQueue queue)
+            VideoJobQueue queue,
+            R2StorageService r2)
         {
             _db = db;
             _queue = queue;
+            _r2 = r2;
         }
 
         // ===========================
@@ -34,9 +37,7 @@ namespace StoryChain.Api.Controllers
         [EnableRateLimiting("VideoUploadPolicy")]
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload(
-            [FromForm] UploadVideoRequest req
-        )
+        public async Task<IActionResult> Upload([FromForm] UploadVideoRequest req)
         {
             if (req.File == null || req.File.Length == 0)
                 return BadRequest("File is empty");
@@ -64,30 +65,29 @@ namespace StoryChain.Api.Controllers
                 return BadRequest("Invalid category");
 
             // ===========================
-            // SAVE FILE
+            // UPLOAD TO R2
             // ===========================
             var fileName = $"{Guid.NewGuid()}{ext}";
-            var storagePath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "Storage"
-            );
+            var key = $"videos/{fileName}";
 
-            Directory.CreateDirectory(storagePath);
+            string videoUrl;
 
-            var path = Path.Combine(storagePath, fileName);
-
-            using (var stream = new FileStream(path, FileMode.Create))
+            try
             {
-                await req.File.CopyToAsync(stream);
+                videoUrl = await _r2.UploadAsync(req.File, key);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Upload failed: " + ex.Message);
             }
 
             // ===========================
-            // CREATE VIDEO
+            // CREATE VIDEO ENTITY
             // ===========================
             var video = new Video
             {
                 UserId = userId,
-                Url = "/storage/" + fileName,
+                Url = videoUrl,
                 VideoCategoryId = req.VideoCategoryId,
                 Processing = false,
                 IsDeleted = false
@@ -108,7 +108,7 @@ namespace StoryChain.Api.Controllers
             await _db.SaveChangesAsync();
 
             // ===========================
-            // HANDLE PARENT
+            // HANDLE PARENT NODE
             // ===========================
             StoryNode? parent = null;
 
@@ -147,7 +147,8 @@ namespace StoryChain.Api.Controllers
             return Ok(new
             {
                 videoId = video.Id,
-                nodeId = node.Id
+                nodeId = node.Id,
+                url = video.Url
             });
         }
 
@@ -207,6 +208,9 @@ namespace StoryChain.Api.Controllers
             });
         }
 
+        // ===========================
+        // GET CATEGORIES
+        // ===========================
         [HttpGet("categories")]
         public async Task<IActionResult> GetCategories()
         {

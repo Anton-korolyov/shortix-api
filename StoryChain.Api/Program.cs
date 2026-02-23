@@ -80,6 +80,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<VideoAnalyzer>();
 builder.Services.AddSingleton<VideoJobQueue>();
 builder.Services.AddHostedService<VideoProcessingWorker>();
+builder.Services.AddSingleton<R2StorageService>();
 
 /////////////////////////////////////////////////////
 // SignalR
