@@ -15,7 +15,10 @@ namespace StoryChain.Api.Services
             var s3Config = new AmazonS3Config
             {
                 ServiceURL = _config["R2:Endpoint"],
-                ForcePathStyle = true
+                ForcePathStyle = true,
+             
+                SignatureVersion = "4"
+
             };
 
             _s3 = new AmazonS3Client(
@@ -34,7 +37,8 @@ namespace StoryChain.Api.Services
                 BucketName = _config["R2:Bucket"],
                 Key = key,
                 InputStream = stream,
-                ContentType = file.ContentType
+                ContentType = file.ContentType,
+                DisablePayloadSigning = true
             };
 
             await _s3.PutObjectAsync(request);
@@ -43,4 +47,5 @@ namespace StoryChain.Api.Services
             return $"{baseUrl}/{key}";
         }
     }
+
 }

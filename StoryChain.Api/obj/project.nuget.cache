@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "HkR/7LcaXFc=",
+  "dgSpecHash": "dspEZfPsY30=",
   "success": true,
   "projectFilePath": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\StoryChain.Api.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\anton\\.nuget\\packages\\awssdk.core\\4.0.3.12\\awssdk.core.4.0.3.12.nupkg.sha512",
-    "C:\\Users\\anton\\.nuget\\packages\\awssdk.s3\\4.0.18.6\\awssdk.s3.4.0.18.6.nupkg.sha512",
+    "C:\\Users\\anton\\.nuget\\packages\\awssdk.core\\3.7.400\\awssdk.core.3.7.400.nupkg.sha512",
+    "C:\\Users\\anton\\.nuget\\packages\\awssdk.s3\\3.7.400\\awssdk.s3.3.7.400.nupkg.sha512",
     "C:\\Users\\anton\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\anton\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.4\\microsoft.aspnetcore.authentication.jwtbearer.8.0.4.nupkg.sha512",
     "C:\\Users\\anton\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
