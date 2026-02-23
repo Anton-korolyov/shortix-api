@@ -232,3 +232,5 @@ C:\projects\myStories\backend\StoryChain\StoryChain.Api\obj\Debug\net8.0\StoryCh
 C:\projects\myStories\backend\StoryChain\StoryChain.Api\obj\Debug\net8.0\ref\StoryChain.Api.dll
 C:\projects\myStories\backend\StoryChain\StoryChain.Api\bin\Debug\net8.0\SixLabors.ImageSharp.dll
 C:\projects\myStories\backend\StoryChain\StoryChain.Api\obj\Debug\net8.0\StoryChain.Api.sourcelink.json
+C:\projects\myStories\backend\StoryChain\StoryChain.Api\bin\Debug\net8.0\AWSSDK.Core.dll
+C:\projects\myStories\backend\StoryChain\StoryChain.Api\bin\Debug\net8.0\AWSSDK.S3.dll

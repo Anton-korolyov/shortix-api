@@ -174,7 +174,7 @@ namespace StoryChain.Api.Controllers
         // ===========================
         // GET VIDEO
         // ===========================
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetVideo(Guid id)
         {
             var video = await _db.Videos
