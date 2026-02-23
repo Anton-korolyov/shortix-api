@@ -179,10 +179,7 @@ using (var scope = app.Services.CreateScope())
 /////////////////////////////////////////////////////
 // STORAGE FOLDER
 /////////////////////////////////////////////////////
-var storagePath =
-    Path.Combine(Directory.GetCurrentDirectory(), "Storage");
 
-Directory.CreateDirectory(storagePath);
 
 /////////////////////////////////////////////////////
 // MIDDLEWARE PIPELINE
@@ -196,11 +193,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(storagePath),
-    RequestPath = "/storage"
-});
+
 
 app.UseRouting();
 
