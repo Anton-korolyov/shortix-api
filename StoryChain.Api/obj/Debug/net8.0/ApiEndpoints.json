@@ -189,37 +189,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "StoryChain.Api.Controllers.FeedController",
-    "Method": "Explore",
-    "RelativePath": "api/Feed/explore",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "q",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "category",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "tags",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "StoryChain.Api.Controllers.FlowController",
     "Method": "GetFlow",
     "RelativePath": "api/flow/{nodeId}",

@@ -219,5 +219,57 @@ namespace StoryChain.Api.Controllers
 
             return Ok(categories);
         }
+        // ===========================
+        // DELETE VIDEO
+        // ===========================
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteVideo(Guid id)
+        {
+            var userId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!
+            );
+
+            var video = await _db.Videos
+                .FirstOrDefaultAsync(v => v.Id == id && !v.IsDeleted);
+
+            if (video == null)
+                return NotFound();
+
+            if (video.UserId != userId)
+                return Forbid();
+
+            // находим story node
+            var node = await _db.StoryNodes
+                .FirstOrDefaultAsync(n => n.VideoId == id);
+
+            if (node == null)
+                return BadRequest("Node not found");
+
+            // проверяем есть ли дети
+            var hasChildren = await _db.StoryNodes
+                .AnyAsync(n => n.ParentNodeId == node.Id);
+
+            if (hasChildren)
+            {
+                return BadRequest(new
+                {
+                    message = "Video has children"
+                });
+            }
+
+            // soft delete
+            video.IsDeleted = true;
+
+            // удаляем node
+            _db.StoryNodes.Remove(node);
+
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                redirectTo = "feed"
+            });
+        }
     }
 }
