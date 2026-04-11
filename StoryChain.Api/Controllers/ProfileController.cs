@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 using StoryChain.Api.Data;
 using StoryChain.Api.DTO;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+using StoryChain.Api.Services;
 namespace StoryChain.Api.Controllers
 {
     [ApiController]
@@ -15,10 +16,11 @@ namespace StoryChain.Api.Controllers
     public class ProfileController : ControllerBase
     {
         private readonly AppDbContext _db;
-
-        public ProfileController(AppDbContext db)
+        private readonly R2VideoService _r2;
+        public ProfileController(AppDbContext db, R2VideoService r2)
         {
             _db = db;
+            _r2 = r2;
         }
 
         // ============================
@@ -138,6 +140,7 @@ namespace StoryChain.Api.Controllers
         // ============================
         // POST api/profile/avatar
         // ============================
+
         [Authorize]
         [HttpPost("avatar")]
         public async Task<IActionResult> UploadAvatar(IFormFile file)
@@ -153,33 +156,18 @@ namespace StoryChain.Api.Controllers
             if (!allowedTypes.Contains(file.ContentType))
                 return BadRequest("Only JPG and PNG allowed");
 
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdStr == null)
-                return Unauthorized();
+            var userId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!
+            );
 
-            var user = await _db.Users.FindAsync(Guid.Parse(userIdStr));
+            var user = await _db.Users.FindAsync(userId);
+
             if (user == null)
                 return NotFound();
 
-            // ============================
-            // DELETE OLD AVATAR
-            // ============================
-
-            if (!string.IsNullOrEmpty(user.AvatarUrl))
-            {
-                var oldPath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "Storage",
-                    user.AvatarUrl.Replace("/storage/", "").Replace("/", Path.DirectorySeparatorChar.ToString())
-                );
-
-                if (System.IO.File.Exists(oldPath))
-                    System.IO.File.Delete(oldPath);
-            }
-
-            // ============================
+            // ======================
             // PROCESS IMAGE
-            // ============================
+            // ======================
 
             using var image = await Image.LoadAsync(file.OpenReadStream());
 
@@ -197,31 +185,38 @@ namespace StoryChain.Api.Controllers
                 x.Resize(256, 256);
             });
 
-            var fileName = Guid.NewGuid() + ".jpg";
+            using var ms = new MemoryStream();
 
-            var folder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "Storage",
-                "avatars"
-            );
-
-            Directory.CreateDirectory(folder);
-
-            var path = Path.Combine(folder, fileName);
-
-            await image.SaveAsync(path, new JpegEncoder
+            await image.SaveAsync(ms, new JpegEncoder
             {
                 Quality = 75
             });
 
-            var url = "/storage/avatars/" + fileName;
+            ms.Position = 0;
+
+            // ======================
+            // UPLOAD TO R2
+            // ======================
+
+            var key = $"avatars/{Guid.NewGuid()}.jpg";
+
+            await _r2.UploadVideoAsync(
+                key,
+                ms,
+                "image/jpeg"
+            );
+
+            var url = _r2.GetPublicUrl(key);
 
             user.AvatarUrl = url;
+
             await _db.SaveChangesAsync();
 
-            return Ok(new { avatarUrl = url });
+            return Ok(new
+            {
+                avatarUrl = url
+            });
         }
-
 
 
         // ============================
