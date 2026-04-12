@@ -5,6 +5,7 @@ using StoryChain.Api.Data;
 
 namespace StoryChain.Api.Controllers
 {
+
     [ApiController]
     [Route("api/[controller]")]
     public class ExploreController : ControllerBase
@@ -41,17 +42,19 @@ namespace StoryChain.Api.Controllers
                     username = n.Video.User.Username,
                     category = n.Video.VideoCategory != null
                         ? n.Video.VideoCategory.Name
-                        : null,
+                        : "",
                     tags = n.Video.Tags.Select(t => t.Tag)
                 });
 
             // SEARCH
-            if (!string.IsNullOrEmpty(q))
+            if (!string.IsNullOrWhiteSpace(q))
             {
+                var search = q.ToLower();
+
                 query = query.Where(v =>
-                    v.username.Contains(q) ||
-                    v.tags.Any(t => t.Contains(q)) ||
-                    (v.category != null && v.category.Contains(q))
+                    v.username.ToLower().Contains(search) ||
+                    v.category.ToLower().Contains(search) ||
+                    v.tags.Any(t => t.ToLower().Contains(search))
                 );
             }
 

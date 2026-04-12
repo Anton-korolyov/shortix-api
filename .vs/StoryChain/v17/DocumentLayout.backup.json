@@ -104,7 +104,7 @@
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\ExploreController.cs",
               "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\ExploreController.cs",
               "RelativeToolTip": "StoryChain.Api\\Controllers\\ExploreController.cs",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAowEwAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAACoAAAAAAAAAAAAkwE4AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-12T05:54:13.089Z",
               "EditorCaption": ""
@@ -119,8 +119,7 @@
               "RelativeToolTip": "StoryChain.Api\\Controllers\\CommentLikeController.cs",
               "ViewState": "AgIAAEwAAAAAAAAAAAAYwG8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T05:24:00.984Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-12T05:24:00.984Z"
             },
             {
               "$type": "Document",
@@ -132,8 +131,7 @@
               "RelativeToolTip": "StoryChain.Api\\Controllers\\LikeController.cs",
               "ViewState": "AgIAAFoAAAAAAAAAAAAUwGkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T04:19:54.536Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-12T04:19:54.536Z"
             },
             {
               "$type": "Document",
@@ -145,8 +143,7 @@
               "RelativeToolTip": "StoryChain.Api\\Controllers\\CommentController.cs",
               "ViewState": "AgIAAHYAAAAAAAAAAAAcwJkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T04:19:42.918Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-12T04:19:42.918Z"
             },
             {
               "$type": "Document",
@@ -158,8 +155,7 @@
               "RelativeToolTip": "StoryChain.Api\\Controllers\\NotificationController.cs",
               "ViewState": "AgIAADgAAAAAAAAAAAAwwFMAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T04:14:27.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-12T04:14:27.675Z"
             },
             {
               "$type": "Document",
@@ -171,8 +167,7 @@
               "RelativeToolTip": "StoryChain.Api\\Api\\NotificationHub.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-11T20:13:59.802Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-11T20:13:59.802Z"
             },
             {
               "$type": "Document",
@@ -216,12 +211,11 @@
               "Title": "FeedController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FeedController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\FeedController.cs",
-              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FeedController.cs*",
-              "RelativeToolTip": "StoryChain.Api\\Controllers\\FeedController.cs*",
+              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FeedController.cs",
+              "RelativeToolTip": "StoryChain.Api\\Controllers\\FeedController.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAuwKoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-08T11:44:50.855Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-08T11:44:50.855Z"
             },
             {
               "$type": "Document",
