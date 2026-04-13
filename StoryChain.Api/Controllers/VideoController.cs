@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -40,8 +41,8 @@ namespace StoryChain.Api.Controllers
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload(
-            [FromForm] UploadVideoRequest req
-        )
+           [FromForm] UploadVideoRequest req
+       )
         {
             // ---------- FILE ----------
             if (req.File == null || req.File.Length == 0)
@@ -68,82 +69,123 @@ namespace StoryChain.Api.Controllers
             if (category == null)
                 return BadRequest("Invalid category");
 
-            // ---------- UPLOAD TO R2 ----------
-            var fileName = $"videos/{Guid.NewGuid()}{ext}";
+            Directory.CreateDirectory("uploads");
 
-            using var stream = req.File.OpenReadStream();
+            var tempOriginal = Path.Combine("uploads", Guid.NewGuid() + ext);
+            var tempCompressed = Path.Combine("uploads", Guid.NewGuid() + "_compressed.mp4");
 
-            await _r2.UploadVideoAsync(
-                fileName,
-                stream,
-                req.File.ContentType
-            );
-
-            var publicUrl = _r2.GetPublicUrl(fileName);
-
-            // ---------- CREATE VIDEO ----------
-            var video = new Video
+            try
             {
-                UserId = userId,
-                Url = publicUrl,
-                VideoCategoryId = req.VideoCategoryId,
-                Processing = false,
-                IsDeleted = false
-            };
-
-            if (req.Tags != null && req.Tags.Any())
-            {
-                foreach (var t in req.Tags.Distinct())
+                // ---------- SAVE ORIGINAL ----------
+                using (var fs = new FileStream(tempOriginal, FileMode.Create))
                 {
-                    video.Tags.Add(new VideoTag
-                    {
-                        Tag = t.ToLower().Trim()
-                    });
+                    await req.File.CopyToAsync(fs);
                 }
+
+                // ---------- FFMPEG COMPRESS ----------
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments =
+                        $"-i \"{tempOriginal}\" -vf scale=720:1280 -r 30 -vcodec libx264 -crf 28 -preset fast -movflags +faststart \"{tempCompressed}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+
+                var process = Process.Start(psi);
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0)
+                {
+                    return StatusCode(500, "Video compression failed");
+                }
+
+                // ---------- UPLOAD TO R2 ----------
+                var fileName = $"videos/{Guid.NewGuid()}.mp4";
+
+                using var stream = System.IO.File.OpenRead(tempCompressed);
+
+                await _r2.UploadVideoAsync(
+                    fileName,
+                    stream,
+                    "video/mp4"
+                );
+
+                var publicUrl = _r2.GetPublicUrl(fileName);
+
+                // ---------- CREATE VIDEO ----------
+                var video = new Video
+                {
+                    UserId = userId,
+                    Url = publicUrl,
+                    VideoCategoryId = req.VideoCategoryId,
+                    Processing = false,
+                    IsDeleted = false
+                };
+
+                if (req.Tags != null && req.Tags.Any())
+                {
+                    foreach (var t in req.Tags.Distinct())
+                    {
+                        video.Tags.Add(new VideoTag
+                        {
+                            Tag = t.ToLower().Trim()
+                        });
+                    }
+                }
+
+                _db.Videos.Add(video);
+                await _db.SaveChangesAsync();
+
+                // ---------- HANDLE PARENT ----------
+                StoryNode? parent = null;
+
+                if (req.ParentNodeId != null)
+                {
+                    parent = await _db.StoryNodes
+                        .FirstOrDefaultAsync(n => n.Id == req.ParentNodeId);
+
+                    if (parent == null)
+                        return BadRequest("Parent not found");
+
+                    var childrenCount = await _db.StoryNodes
+                        .CountAsync(n => n.ParentNodeId == parent.Id);
+
+                    if (childrenCount >= MAX_BRANCHES)
+                        return BadRequest("Branch limit reached");
+                }
+
+                // ---------- CREATE STORY NODE ----------
+                var node = new StoryNode
+                {
+                    StoryId = parent == null
+                        ? Guid.NewGuid()
+                        : parent.StoryId,
+
+                    VideoId = video.Id,
+                    ParentNodeId = req.ParentNodeId,
+                    Depth = parent == null ? 0 : parent.Depth + 1
+                };
+
+                _db.StoryNodes.Add(node);
+                await _db.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    videoId = video.Id,
+                    nodeId = node.Id,
+                    url = publicUrl
+                });
             }
-
-            _db.Videos.Add(video);
-            await _db.SaveChangesAsync();
-
-            // ---------- HANDLE PARENT ----------
-            StoryNode? parent = null;
-
-            if (req.ParentNodeId != null)
+            finally
             {
-                parent = await _db.StoryNodes
-                    .FirstOrDefaultAsync(n => n.Id == req.ParentNodeId);
+                if (System.IO.File.Exists(tempOriginal))
+                    System.IO.File.Delete(tempOriginal);
 
-                if (parent == null)
-                    return BadRequest("Parent not found");
-
-                var childrenCount = await _db.StoryNodes
-                    .CountAsync(n => n.ParentNodeId == parent.Id);
-
-                if (childrenCount >= MAX_BRANCHES)
-                    return BadRequest("Branch limit reached");
+                if (System.IO.File.Exists(tempCompressed))
+                    System.IO.File.Delete(tempCompressed);
             }
-
-            // ---------- CREATE STORY NODE ----------
-            var node = new StoryNode
-            {
-                StoryId = parent == null
-                    ? Guid.NewGuid()
-                    : parent.StoryId,
-
-                VideoId = video.Id,
-                ParentNodeId = req.ParentNodeId,
-                Depth = parent == null ? 0 : parent.Depth + 1
-            };
-
-            _db.StoryNodes.Add(node);
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                videoId = video.Id,
-                nodeId = node.Id,
-                url = publicUrl
-            });
         }
 
         // ===========================
