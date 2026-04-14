@@ -17,7 +17,7 @@ namespace StoryChain.Api.Models
 
         public bool IsDeleted { get; set; }
         public bool Processing { get; set; }
-
+      
         public ModerationStatus ModerationStatus { get; set; } = ModerationStatus.Pending;
 
         public double? NsfwScore { get; set; }

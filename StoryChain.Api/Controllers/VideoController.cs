@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,13 +39,14 @@ namespace StoryChain.Api.Controllers
         // ===========================
         [Authorize]
         [EnableRateLimiting("VideoUploadPolicy")]
+        [RequestSizeLimit(100_000_000)]
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Upload(
-           [FromForm] UploadVideoRequest req
-       )
+        public async Task<IActionResult> Upload([FromForm] UploadVideoRequest req)
         {
-            // ---------- FILE ----------
+            const int MAX_DURATION = 60;
+            const int MAX_DEPTH = 10;
+
             if (req.File == null || req.File.Length == 0)
                 return BadRequest("File is empty");
 
@@ -57,12 +59,11 @@ namespace StoryChain.Api.Controllers
             if (!allowedExtensions.Contains(ext))
                 return BadRequest("Invalid video format");
 
-            // ---------- USER ----------
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
+            if (!req.File.ContentType.StartsWith("video/"))
+                return BadRequest("Invalid file type");
 
-            // ---------- CATEGORY ----------
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
             var category = await _db.VideoCategories
                 .FirstOrDefaultAsync(c => c.Id == req.VideoCategoryId);
 
@@ -74,51 +75,96 @@ namespace StoryChain.Api.Controllers
             var tempOriginal = Path.Combine("uploads", Guid.NewGuid() + ext);
             var tempCompressed = Path.Combine("uploads", Guid.NewGuid() + "_compressed.mp4");
 
+            var thumb1 = Path.Combine("uploads", Guid.NewGuid() + "_1.jpg");
+            var thumb2 = Path.Combine("uploads", Guid.NewGuid() + "_2.jpg");
+            var thumb3 = Path.Combine("uploads", Guid.NewGuid() + "_3.jpg");
+
             try
             {
-                // ---------- SAVE ORIGINAL ----------
-                using (var fs = new FileStream(tempOriginal, FileMode.Create))
+                // SAVE ORIGINAL
+                await using (var fs = new FileStream(tempOriginal, FileMode.Create))
                 {
                     await req.File.CopyToAsync(fs);
                 }
 
-                // ---------- FFMPEG COMPRESS ----------
+                // GET DURATION
+                var duration = await GetVideoDuration(tempOriginal);
+
+                if (duration > MAX_DURATION)
+                    return BadRequest($"Video too long (max {MAX_DURATION} sec)");
+
+                // COMPRESS VIDEO
                 var psi = new ProcessStartInfo
                 {
                     FileName = "ffmpeg",
                     Arguments =
-                        $"-i \"{tempOriginal}\" -vf scale=720:1280 -r 30 -vcodec libx264 -crf 28 -preset fast -movflags +faststart \"{tempCompressed}\"",
-                    RedirectStandardOutput = true,
+                    $"-i \"{tempOriginal}\" -vf \"scale=-2:1280\" -r 30 -c:v libx264 -preset veryfast -crf 27 -b:v 1500k -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart \"{tempCompressed}\"",
                     RedirectStandardError = true,
+                    RedirectStandardOutput = true,
                     UseShellExecute = false
                 };
 
                 var process = Process.Start(psi);
+
+                var error = await process.StandardError.ReadToEndAsync();
+
                 await process.WaitForExitAsync();
 
                 if (process.ExitCode != 0)
                 {
+                    Console.WriteLine("FFmpeg error:");
+                    Console.WriteLine(error);
+
                     return StatusCode(500, "Video compression failed");
                 }
 
-                // ---------- UPLOAD TO R2 ----------
-                var fileName = $"videos/{Guid.NewGuid()}.mp4";
+                // освобождаем место
+                SafeDelete(tempOriginal);
 
-                using var stream = System.IO.File.OpenRead(tempCompressed);
+                // GENERATE THUMBNAILS
+                var t1 = duration * 0.2;
+                var t2 = duration * 0.5;
+                var t3 = duration * 0.8;
+
+                await RunFfmpegFrame(tempCompressed, thumb1, t1);
+                await RunFfmpegFrame(tempCompressed, thumb2, t2);
+                await RunFfmpegFrame(tempCompressed, thumb3, t3);
+
+                var bestThumb = thumb2;
+
+                // UPLOAD VIDEO
+                var videoFileName = $"videos/{Guid.NewGuid()}.mp4";
+
+                await using var videoStream = System.IO.File.OpenRead(tempCompressed);
 
                 await _r2.UploadVideoAsync(
-                    fileName,
-                    stream,
+                    videoFileName,
+                    videoStream,
                     "video/mp4"
                 );
 
-                var publicUrl = _r2.GetPublicUrl(fileName);
+                var videoUrl = _r2.GetPublicUrl(videoFileName);
 
-                // ---------- CREATE VIDEO ----------
+                // UPLOAD THUMBNAIL
+                var thumbFileName = $"thumbs/{Guid.NewGuid()}.jpg";
+
+                await using var thumbStream = System.IO.File.OpenRead(bestThumb);
+
+                await _r2.UploadVideoAsync(
+                    thumbFileName,
+                    thumbStream,
+                    "image/jpeg"
+                );
+
+                var thumbUrl = _r2.GetPublicUrl(thumbFileName);
+
+                // CREATE VIDEO
                 var video = new Video
                 {
                     UserId = userId,
-                    Url = publicUrl,
+                    Url = videoUrl,
+                    ThumbnailUrl = thumbUrl,
+                    DurationSec = (int)duration,
                     VideoCategoryId = req.VideoCategoryId,
                     Processing = false,
                     IsDeleted = false
@@ -138,7 +184,7 @@ namespace StoryChain.Api.Controllers
                 _db.Videos.Add(video);
                 await _db.SaveChangesAsync();
 
-                // ---------- HANDLE PARENT ----------
+                // HANDLE PARENT
                 StoryNode? parent = null;
 
                 if (req.ParentNodeId != null)
@@ -149,6 +195,9 @@ namespace StoryChain.Api.Controllers
                     if (parent == null)
                         return BadRequest("Parent not found");
 
+                    if (parent.Depth >= MAX_DEPTH)
+                        return BadRequest("Max story depth reached");
+
                     var childrenCount = await _db.StoryNodes
                         .CountAsync(n => n.ParentNodeId == parent.Id);
 
@@ -156,7 +205,6 @@ namespace StoryChain.Api.Controllers
                         return BadRequest("Branch limit reached");
                 }
 
-                // ---------- CREATE STORY NODE ----------
                 var node = new StoryNode
                 {
                     StoryId = parent == null
@@ -175,16 +223,18 @@ namespace StoryChain.Api.Controllers
                 {
                     videoId = video.Id,
                     nodeId = node.Id,
-                    url = publicUrl
+                    url = videoUrl,
+                    thumbnail = thumbUrl,
+                    duration = duration
                 });
             }
             finally
             {
-                if (System.IO.File.Exists(tempOriginal))
-                    System.IO.File.Delete(tempOriginal);
-
-                if (System.IO.File.Exists(tempCompressed))
-                    System.IO.File.Delete(tempCompressed);
+                SafeDelete(tempOriginal);
+                SafeDelete(tempCompressed);
+                SafeDelete(thumb1);
+                SafeDelete(thumb2);
+                SafeDelete(thumb3);
             }
         }
 
@@ -312,6 +362,44 @@ namespace StoryChain.Api.Controllers
             {
                 redirectTo = "feed"
             });
+        }
+        private async Task<double> GetVideoDuration(string path)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "ffprobe",
+                Arguments = $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{path}\"",
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+
+            var process = Process.Start(psi);
+
+            var result = await process.StandardOutput.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+
+            return double.Parse(result, CultureInfo.InvariantCulture);
+        }
+
+        private async Task RunFfmpegFrame(string video, string output, double second)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = $"-ss {second.ToString(CultureInfo.InvariantCulture)} -i \"{video}\" -frames:v 1 \"{output}\"",
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            var p = Process.Start(psi);
+            await p.WaitForExitAsync();
+        }
+
+        private void SafeDelete(string path)
+        {
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
         }
     }
 }
