@@ -179,5 +179,18 @@ namespace StoryChain.Api.Controllers
 
             return Ok(following);
         }
+        [Authorize]
+        [HttpGet("following/count")]
+        public async Task<IActionResult> GetMyFollowingCount()
+        {
+            var userId = Guid.Parse(
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value
+            );
+
+            var count = await _db.Followers
+                .CountAsync(x => x.FollowerUserId == userId);
+
+            return Ok(new { count });
+        }
     }
 }
