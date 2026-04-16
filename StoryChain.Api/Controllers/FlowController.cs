@@ -18,29 +18,56 @@ namespace StoryChain.Api.Controllers
         }
 
         // ===========================
-        // GET FLOW (DEFAULT + VARIANTS)
+        // GET FLOW
         // ===========================
         [HttpGet("{nodeId}")]
         public async Task<IActionResult> GetFlow(Guid nodeId)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             Guid? userId =
                 Guid.TryParse(userIdStr, out var u)
                     ? u
                     : null;
 
+            // ⚡ ОДИН SQL запрос
             var children = await _db.StoryNodes
-                .Include(n => n.Video)
-                .ThenInclude(v => v.User)
+                .AsNoTracking()
                 .Where(n =>
                     n.ParentNodeId == nodeId &&
                     !n.Video.IsDeleted &&
                     !n.Video.Processing
                 )
-                .OrderBy(n => n.Video.CreatedAt)
+                .Select(n => new
+                {
+                    id = n.Id,
+
+                    url = n.Video.Url,
+                    thumbnail = n.Video.ThumbnailUrl,
+
+                    username = n.Video.User.Username,
+                    avatarUrl = n.Video.User.AvatarUrl,
+                    bio = n.Video.User.Bio,
+
+                    likes = _db.Likes.Count(l => l.StoryNodeId == n.Id),
+
+                    comments = _db.Comments.Count(c => c.StoryNodeId == n.Id),
+
+                    isLiked = userId != null &&
+                        _db.Likes.Any(l =>
+                            l.StoryNodeId == n.Id &&
+                            l.UserId == userId),
+
+                    hasChildren =
+                        _db.StoryNodes.Any(c =>
+                            c.ParentNodeId == n.Id),
+
+                    created = n.Video.CreatedAt
+                })
+                .Take(5)
                 .ToListAsync();
 
-            if (!children.Any())
+            if (children.Count == 0)
             {
                 return Ok(new
                 {
@@ -49,73 +76,45 @@ namespace StoryChain.Api.Controllers
                 });
             }
 
-            var chosen = await PickDefaultChild(nodeId);
-
-            object Map(StoryNode n) => new
-            {
-                id = n.Id,
-                url = n.Video.Url,
-
-                username = n.Video.User.Username,
-                avatarUrl = n.Video.User.AvatarUrl,
-                bio = n.Video.User.Bio,
-
-                likes = _db.Likes.Count(l => l.StoryNodeId == n.Id),
-                comments = _db.Comments.Count(c => c.StoryNodeId == n.Id),
-
-                isLiked = userId != null &&
-                    _db.Likes.Any(l =>
-                        l.StoryNodeId == n.Id &&
-                        l.UserId == userId),
-
-                hasChildren = _db.StoryNodes
-                    .Any(c => c.ParentNodeId == n.Id)
-            };
+            // 🔥 выбираем default
+            var chosen = children
+                .OrderByDescending(v => v.likes + v.comments)
+                .ThenBy(v => v.created)
+                .First();
 
             return Ok(new
             {
-                defaultVideo = chosen != null
-                    ? Map(chosen)
-                    : null,
-
-                alternatives = children.Select(Map)
+                defaultVideo = chosen,
+                alternatives = children
             });
         }
 
         // ===========================
-        // PICK DEFAULT CHILD
+        // FAST PRELOAD NEXT VIDEO
         // ===========================
-        private async Task<StoryNode?> PickDefaultChild(Guid parentNodeId)
+        [HttpGet("next/{nodeId}")]
+        public async Task<IActionResult> GetNext(Guid nodeId)
         {
-            // 🔥 Most popular
-            var popular = await _db.StoryNodes
-                .Include(n => n.Video)
-                .ThenInclude(v => v.User)
+            var next = await _db.StoryNodes
+                .AsNoTracking()
                 .Where(n =>
-                    n.ParentNodeId == parentNodeId &&
+                    n.ParentNodeId == nodeId &&
                     !n.Video.IsDeleted &&
                     !n.Video.Processing
                 )
-                .OrderByDescending(n =>
-                    _db.Likes.Count(l => l.StoryNodeId == n.Id) +
-                    _db.Comments.Count(c => c.StoryNodeId == n.Id)
-                )
+                .Select(n => new
+                {
+                    id = n.Id,
+                    url = n.Video.Url,
+                    thumbnail = n.Video.ThumbnailUrl,
+
+                    hasChildren =
+                        _db.StoryNodes.Any(c =>
+                            c.ParentNodeId == n.Id)
+                })
                 .FirstOrDefaultAsync();
 
-            if (popular != null)
-                return popular;
-
-            // 🎲 Random fallback
-            return await _db.StoryNodes
-                .Include(n => n.Video)
-                .ThenInclude(v => v.User)
-                .Where(n =>
-                    n.ParentNodeId == parentNodeId &&
-                    !n.Video.IsDeleted &&
-                    !n.Video.Processing
-                )
-                .OrderBy(x => Guid.NewGuid())
-                .FirstOrDefaultAsync();
+            return Ok(next);
         }
     }
 }
