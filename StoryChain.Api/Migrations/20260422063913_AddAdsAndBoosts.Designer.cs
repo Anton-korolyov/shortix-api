@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StoryChain.Api.Data;
@@ -11,9 +12,11 @@ using StoryChain.Api.Data;
 namespace StoryChain.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422063913_AddAdsAndBoosts")]
+    partial class AddAdsAndBoosts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace StoryChain.Api.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int>("Budget")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Clicks")
                         .HasColumnType("integer");
 
                     b.Property<int>("Days")
@@ -60,9 +60,6 @@ namespace StoryChain.Api.Migrations
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Views")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

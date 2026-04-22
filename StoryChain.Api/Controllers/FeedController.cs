@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using StoryChain.Api.Data;
 
 namespace StoryChain.Api.Controllers;
@@ -10,10 +12,12 @@ namespace StoryChain.Api.Controllers;
 public class FeedController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IDatabase _redis;
 
-    public FeedController(AppDbContext db)
+    public FeedController(AppDbContext db, IConnectionMultiplexer redis)
     {
         _db = db;
+        _redis = redis.GetDatabase();
     }
 
     [HttpGet]
@@ -21,21 +25,53 @@ public class FeedController : ControllerBase
         int page = 1,
         int pageSize = 10,
         Guid? categoryId = null,
-        bool following = false
-    )
+        bool following = false)
     {
         if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
         if (pageSize > 50) pageSize = 50;
 
         Guid? userId = null;
 
         var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (idClaim != null)
-            userId = Guid.Parse(idClaim.Value);
 
+        if (idClaim != null && Guid.TryParse(idClaim.Value, out var parsed))
+        {
+            userId = parsed;
+        }
+
+        string cacheKey = $"feed:{userId}:{page}:{categoryId}:{following}";
+
+        /////////////////////////////////////////////////////
+        // REDIS CACHE
+        /////////////////////////////////////////////////////
+
+        var cached = await _redis.StringGetAsync(cacheKey);
+
+        if (!cached.IsNullOrEmpty)
+        {
+            return Content(cached!, "application/json");
+        }
+
+        var now = DateTime.UtcNow;
+
+        /////////////////////////////////////////////////////
+        // BOOST
+        /////////////////////////////////////////////////////
+
+        var boostedSet = (await _db.VideoBoosts
+            .AsNoTracking()
+            .Where(b => b.Active && b.EndDate > now)
+            .Select(b => b.VideoId)
+            .ToListAsync())
+            .ToHashSet();
+
+        /////////////////////////////////////////////////////
         // BASE QUERY
+        /////////////////////////////////////////////////////
 
         var query = _db.StoryNodes
+            .AsNoTracking()
             .Where(n =>
                 n.ParentNodeId == null &&
                 !n.Video.IsDeleted &&
@@ -48,17 +84,16 @@ public class FeedController : ControllerBase
                 url = n.Video.Url,
                 thumbnailUrl = n.Video.ThumbnailUrl,
                 createdAt = n.Video.CreatedAt,
+
                 userId = n.Video.UserId,
                 username = n.Video.User.Username,
                 avatarUrl = n.Video.User.AvatarUrl,
-                bio = n.Video.User.Bio,
-                category = n.Video.VideoCategory != null
-                    ? n.Video.VideoCategory.Name
-                    : null,
-                tags = n.Video.Tags.Select(t => t.Tag).ToList()
+                bio = n.Video.User.Bio
             });
 
+        /////////////////////////////////////////////////////
         // FOLLOWING FILTER
+        /////////////////////////////////////////////////////
 
         if (following && userId != null)
         {
@@ -67,106 +102,159 @@ public class FeedController : ControllerBase
                     f.FollowerUserId == userId &&
                     f.FollowingUserId == n.userId
                 )
-                && n.userId != userId
             );
         }
 
+        /////////////////////////////////////////////////////
         // CATEGORY FILTER
+        /////////////////////////////////////////////////////
 
         if (categoryId != null)
         {
             query = query.Where(n =>
-                _db.Videos.Any(v =>
-                    v.Id == n.videoId &&
-                    v.VideoCategoryId == categoryId
-                )
+                n.videoId != Guid.Empty &&
+                n.videoId == n.videoId
             );
         }
 
-        // ORDER
+        /////////////////////////////////////////////////////
+        // LOAD VIDEOS
+        /////////////////////////////////////////////////////
 
-        query = query.OrderByDescending(v => v.createdAt);
-
-        var total = await query.CountAsync();
-
-        // PAGE
-
-        var videos = await query
+        var loadedVideos = await query
+            .OrderByDescending(v => v.createdAt)
             .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Take(pageSize * 5)
             .ToListAsync();
 
-        var nodeIds = videos.Select(v => v.nodeId).ToList();
+        /////////////////////////////////////////////////////
+        // BOOST MIX
+        /////////////////////////////////////////////////////
 
-        // LIKES COUNT
+        var normalVideos = loadedVideos
+            .Where(v => !boostedSet.Contains(v.videoId))
+            .ToList();
 
-        var likes = await _db.Likes
-            .Where(l => nodeIds.Contains(l.StoryNodeId))
-            .GroupBy(l => l.StoryNodeId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Key, x => x.Count);
+        var boostVideos = loadedVideos
+            .Where(v => boostedSet.Contains(v.videoId))
+            .ToList();
 
-        // COMMENTS COUNT
+        var videos = new List<dynamic>();
 
-        var comments = await _db.Comments
-            .Where(c => nodeIds.Contains(c.StoryNodeId))
-            .GroupBy(c => c.StoryNodeId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Key, x => x.Count);
+        int normalIndex = 0;
+        int boostIndex = 0;
 
-        // CHILDREN CHECK
-
-        var children = await _db.StoryNodes
-            .Where(c => c.ParentNodeId != null && nodeIds.Contains(c.ParentNodeId.Value))
-            .GroupBy(c => c.ParentNodeId)
-            .Select(g => g.Key)
-            .ToListAsync();
-
-        // LIKED BY USER
-
-        HashSet<Guid> liked = new();
-
-        if (userId != null)
+        while (videos.Count < pageSize && normalIndex < normalVideos.Count)
         {
-            liked = _db.Likes
-                .Where(l =>
-                    nodeIds.Contains(l.StoryNodeId) &&
-                    l.UserId == userId
-                )
-                .Select(l => l.StoryNodeId)
-                .ToHashSet();
+            for (int i = 0; i < 4 && normalIndex < normalVideos.Count && videos.Count < pageSize; i++)
+            {
+                videos.Add(normalVideos[normalIndex]);
+                normalIndex++;
+            }
+
+            if (boostVideos.Count > 0 && videos.Count < pageSize)
+            {
+                videos.Add(boostVideos[boostIndex % boostVideos.Count]);
+                boostIndex++;
+            }
         }
 
-        var items = videos.Select(v => new
+        /////////////////////////////////////////////////////
+        // ADS
+        /////////////////////////////////////////////////////
+
+        var ads = await _db.Ads
+            .AsNoTracking()
+            .Where(a =>
+                a.Active &&
+                a.StartDate <= now &&
+                a.EndDate >= now &&
+                a.Views < a.Budget
+            )
+            .Take(5)
+            .ToListAsync();
+
+        /////////////////////////////////////////////////////
+        // MERGE ADS
+        /////////////////////////////////////////////////////
+
+        List<object> feed = new();
+
+        int adIndex = 0;
+        int adEvery = 5;
+
+        foreach (var video in videos)
         {
-            type = "video",
-            id = v.nodeId,
-            videoId = v.videoId,
-            url = v.url,
-            thumbnailUrl = v.thumbnailUrl,
-            category = v.category,
-            tags = v.tags,
-            createdAt = v.createdAt,
+            feed.Add(new
+            {
+                type = "video",
+                id = video.nodeId,
+                videoId = video.videoId,
+                url = video.url,
+                thumbnailUrl = video.thumbnailUrl,
+                username = video.username,
+                avatarUrl = video.avatarUrl,
+                bio = video.bio
+            });
 
-            likes = likes.ContainsKey(v.nodeId) ? likes[v.nodeId] : 0,
-            comments = comments.ContainsKey(v.nodeId) ? comments[v.nodeId] : 0,
-            hasChildren = children.Contains(v.nodeId),
-            isLiked = liked.Contains(v.nodeId),
+            if (feed.Count % adEvery == 0 && ads.Count > 0)
+            {
+                var ad = ads[adIndex % ads.Count];
 
-            username = v.username,
-            avatarUrl = v.avatarUrl,
-            bio = v.bio
-        }).ToList();
+                feed.Add(new
+                {
+                    type = "ad",
+                    id = ad.Id,
+                    adType = ad.Type,
+                    mediaUrl = ad.MediaUrl,
+                    link = ad.Link
+                });
 
-        return Ok(new
+                adIndex++;
+            }
+        }
+
+        /////////////////////////////////////////////////////
+        // UPDATE AD VIEWS
+        /////////////////////////////////////////////////////
+
+        if (ads.Count > 0)
+        {
+            var adIds = ads.Select(a => a.Id).ToList();
+
+            var dbAds = await _db.Ads
+                .Where(a => adIds.Contains(a.Id))
+                .ToListAsync();
+
+            foreach (var ad in dbAds)
+            {
+                ad.Views++;
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
+        /////////////////////////////////////////////////////
+        // RESULT
+        /////////////////////////////////////////////////////
+
+        var result = new
         {
             page,
             pageSize,
-            total,
-            hasMore = page * pageSize < total,
-            items
-        });
+            items = feed
+        };
+
+        /////////////////////////////////////////////////////
+        // SAVE REDIS
+        /////////////////////////////////////////////////////
+
+        await _redis.StringSetAsync(
+            cacheKey,
+            JsonSerializer.Serialize(result),
+            TimeSpan.FromSeconds(30)
+        );
+
+        return Ok(result);
     }
-
-
 }

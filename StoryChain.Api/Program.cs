@@ -2,8 +2,8 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using StoryChain.Api.Api;
 using StoryChain.Api.Data;
 using StoryChain.Api.Models;
@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 /////////////////////////////////////////////////////
 // CORS
 /////////////////////////////////////////////////////
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -27,8 +28,9 @@ builder.Services.AddCors(options =>
 });
 
 /////////////////////////////////////////////////////
-// DB
+// DATABASE
 /////////////////////////////////////////////////////
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
@@ -36,14 +38,30 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 /////////////////////////////////////////////////////
-// Controllers
+// REDIS
 /////////////////////////////////////////////////////
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConnection =
+        builder.Configuration.GetConnectionString("Redis") ??
+        "localhost:6379";
+
+    return ConnectionMultiplexer.Connect(redisConnection);
+});
+
+/////////////////////////////////////////////////////
+// CONTROLLERS
+/////////////////////////////////////////////////////
+
 builder.Services.AddControllers();
 
 /////////////////////////////////////////////////////
-// Swagger + JWT support
+// SWAGGER + JWT
 /////////////////////////////////////////////////////
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer",
@@ -74,22 +92,27 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 /////////////////////////////////////////////////////
-// Services
+// SERVICES
 /////////////////////////////////////////////////////
+
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<VideoAnalyzer>();
+
 builder.Services.AddSingleton<VideoJobQueue>();
 builder.Services.AddHostedService<VideoProcessingWorker>();
+
 builder.Services.AddSingleton<R2VideoService>();
 
 /////////////////////////////////////////////////////
-// SignalR
+// SIGNALR
 /////////////////////////////////////////////////////
+
 builder.Services.AddSignalR();
 
 /////////////////////////////////////////////////////
-// JWT Auth
+// JWT AUTH
 /////////////////////////////////////////////////////
+
 builder.Services
 .AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
@@ -109,7 +132,6 @@ builder.Services
         )
     };
 
-    // 🔥 JWT FOR SIGNALR
     options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -129,16 +151,18 @@ builder.Services
 });
 
 /////////////////////////////////////////////////////
-// Upload limit
+// UPLOAD LIMIT
 /////////////////////////////////////////////////////
+
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50MB
 });
 
 /////////////////////////////////////////////////////
-// Rate Limiter (upload videos)
+// RATE LIMITER (video upload)
 /////////////////////////////////////////////////////
+
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("VideoUploadPolicy", context =>
@@ -166,23 +190,21 @@ builder.Services.AddRateLimiter(options =>
 /////////////////////////////////////////////////////
 // BUILD
 /////////////////////////////////////////////////////
+
 var app = builder.Build();
 
-
+/////////////////////////////////////////////////////
+// AUTO MIGRATION
+/////////////////////////////////////////////////////
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
     db.Database.Migrate();
 }
-/////////////////////////////////////////////////////
-// STORAGE FOLDER
-/////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////
-// MIDDLEWARE PIPELINE
+// MIDDLEWARE
 /////////////////////////////////////////////////////
 
 if (app.Environment.IsDevelopment())
@@ -190,10 +212,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-//app.UseHttpsRedirection();
-
-
 
 app.UseRouting();
 
@@ -205,12 +223,13 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 /////////////////////////////////////////////////////
-// MAPS
+// ENDPOINTS
 /////////////////////////////////////////////////////
 
 app.MapHub<NotificationHub>("/hubs/notifications");
+
 app.MapControllers();
 
 /////////////////////////////////////////////////////
+
 app.Run();
-/////////////////////////////////////////////////////

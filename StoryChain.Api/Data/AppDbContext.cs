@@ -27,6 +27,8 @@ namespace StoryChain.Api.Data
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<VideoCategory> VideoCategories => Set<VideoCategory>();
         public DbSet<VideoTag> VideoTags => Set<VideoTag>();
+        public DbSet<VideoBoost> VideoBoosts => Set<VideoBoost>();
+        public DbSet<Ad> Ads => Set<Ad>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -60,6 +62,13 @@ namespace StoryChain.Api.Data
             // 🔥 VIDEO TAGS
             modelBuilder.Entity<VideoTag>()
                 .HasIndex(t => t.Tag);
+
+            modelBuilder.Entity<VideoBoost>()
+                .HasIndex(b => new { b.VideoId, b.Active });
+
+            // ADS
+            modelBuilder.Entity<Ad>()
+                .HasIndex(a => new { a.Active, a.StartDate, a.EndDate });
         }
     }
 }
