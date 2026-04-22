@@ -118,7 +118,20 @@ public class FeedController : ControllerBase
             })
             .ToListAsync();
 
+        var nodeIds = videos.Select(v => v.NodeId).ToList();
         var videoIds = videos.Select(v => v.VideoId).ToList();
+
+        //-----------------------------------------
+        // FLOW (hasChildren)
+        //-----------------------------------------
+
+        var childrenNodes = await _db.StoryNodes
+            .Where(x => x.ParentNodeId != null && nodeIds.Contains(x.ParentNodeId.Value))
+            .Select(x => x.ParentNodeId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        var childrenSet = childrenNodes.ToHashSet();
 
         //-----------------------------------------
         // LIKE COUNTS
@@ -170,23 +183,19 @@ public class FeedController : ControllerBase
                 NodeId = v.NodeId,
                 VideoId = v.VideoId,
                 UserId = v.UserId,
-
                 Url = v.Url ?? "",
                 ThumbnailUrl = v.ThumbnailUrl,
                 CreatedAt = v.CreatedAt,
-
                 Username = v.Username ?? "",
                 AvatarUrl = v.AvatarUrl,
                 Bio = v.Bio,
-
                 VideoCategoryId = v.CategoryId,
-
                 LikesCount = likes.GetValueOrDefault(v.VideoId),
                 ViewsCount = views.GetValueOrDefault(v.VideoId),
                 WatchSeconds = watch.GetValueOrDefault(v.VideoId),
-
                 IsBoosted = boostedVideoIds.Contains(v.VideoId),
-                IsFollowingAuthor = followingIds.Contains(v.UserId)
+                IsFollowingAuthor = followingIds.Contains(v.UserId),
+                HasChildren = childrenSet.Contains(v.NodeId)
             });
         }
 
@@ -231,12 +240,12 @@ public class FeedController : ControllerBase
         {
             var cursorIndex = ordered.FindIndex(x => x.NodeId == cursor.Value);
             if (cursorIndex >= 0)
-            {
-                ordered = ordered
-                    .Skip(cursorIndex + 1)
-                    .ToList();
-            }
+                ordered = ordered.Skip(cursorIndex + 1).ToList();
         }
+
+        //-----------------------------------------
+        // PAGE
+        //-----------------------------------------
 
         var pageVideos = ordered
             .Take(pageSize)
@@ -250,17 +259,13 @@ public class FeedController : ControllerBase
                 username = video.Username,
                 avatarUrl = video.AvatarUrl,
                 bio = video.Bio,
-                score = video.Score
+                hasChildren = video.HasChildren
             })
             .ToList<object>();
 
         var nextCursor = pageVideos.Count > 0
             ? ((dynamic)pageVideos.Last()).id
             : (Guid?)null;
-
-        //-----------------------------------------
-        // RESULT
-        //-----------------------------------------
 
         var result = new
         {
@@ -299,6 +304,8 @@ public class FeedController : ControllerBase
 
         public bool IsBoosted { get; set; }
         public bool IsFollowingAuthor { get; set; }
+
+        public bool HasChildren { get; set; }
 
         public double Score { get; set; }
     }
