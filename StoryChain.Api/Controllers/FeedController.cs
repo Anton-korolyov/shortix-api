@@ -56,7 +56,7 @@ public class FeedController : ControllerBase
             .ToHashSet();
 
         //-----------------------------------------
-        // FOLLOWING
+        // FOLLOWING IDS
         //-----------------------------------------
 
         var followingIds = currentUserId == null
@@ -81,6 +81,20 @@ public class FeedController : ControllerBase
 
         if (categoryId != null)
             baseQuery = baseQuery.Where(n => n.Video.VideoCategoryId == categoryId);
+
+        if (following)
+        {
+            if (currentUserId == null)
+            {
+                return Ok(new
+                {
+                    items = new List<object>(),
+                    nextCursor = (Guid?)null
+                });
+            }
+
+            baseQuery = baseQuery.Where(n => followingIds.Contains(n.Video.UserId));
+        }
 
         //-----------------------------------------
         // LOAD VIDEOS
@@ -111,6 +125,7 @@ public class FeedController : ControllerBase
         //-----------------------------------------
 
         var likes = await _db.Likes
+            .AsNoTracking()
             .Join(_db.StoryNodes,
                 l => l.StoryNodeId,
                 n => n.Id,
@@ -125,6 +140,7 @@ public class FeedController : ControllerBase
         //-----------------------------------------
 
         var views = await _db.VideoViews
+            .AsNoTracking()
             .Where(v => videoIds.Contains(v.VideoId))
             .GroupBy(v => v.VideoId)
             .Select(g => new { g.Key, Count = g.Count() })
@@ -135,6 +151,7 @@ public class FeedController : ControllerBase
         //-----------------------------------------
 
         var watch = await _db.WatchTimes
+            .AsNoTracking()
             .Where(w => videoIds.Contains(w.VideoId))
             .GroupBy(w => w.VideoId)
             .Select(g => new { g.Key, Seconds = g.Sum(x => x.Seconds) })
@@ -203,6 +220,7 @@ public class FeedController : ControllerBase
         var ordered = candidates
             .OrderByDescending(x => x.Score)
             .ThenByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.NodeId)
             .ToList();
 
         //-----------------------------------------
@@ -211,13 +229,34 @@ public class FeedController : ControllerBase
 
         if (cursor != null)
         {
-            ordered = ordered
-                .Where(x => x.NodeId.CompareTo(cursor.Value) < 0)
-                .ToList();
+            var cursorIndex = ordered.FindIndex(x => x.NodeId == cursor.Value);
+            if (cursorIndex >= 0)
+            {
+                ordered = ordered
+                    .Skip(cursorIndex + 1)
+                    .ToList();
+            }
         }
 
-        var pageVideos = ordered.Take(pageSize).ToList();
-        var nextCursor = pageVideos.LastOrDefault()?.NodeId;
+        var pageVideos = ordered
+            .Take(pageSize)
+            .Select(video => new
+            {
+                type = "video",
+                id = video.NodeId,
+                videoId = video.VideoId,
+                url = video.Url,
+                thumbnailUrl = video.ThumbnailUrl,
+                username = video.Username,
+                avatarUrl = video.AvatarUrl,
+                bio = video.Bio,
+                score = video.Score
+            })
+            .ToList<object>();
+
+        var nextCursor = pageVideos.Count > 0
+            ? ((dynamic)pageVideos.Last()).id
+            : (Guid?)null;
 
         //-----------------------------------------
         // RESULT
