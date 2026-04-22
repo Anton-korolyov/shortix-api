@@ -77,17 +77,14 @@ public class FeedController : ControllerBase
             : (await _db.Likes
                 .AsNoTracking()
                 .Where(l => l.UserId == currentUserId)
-
                 .Join(_db.StoryNodes,
                     l => l.StoryNodeId,
                     n => n.Id,
                     (l, n) => n.VideoId)
-
                 .Join(_db.Videos,
                     videoId => videoId,
                     v => v.Id,
                     (videoId, v) => v.VideoCategoryId)
-
                 .Where(c => c != null)
                 .Select(c => c!.Value)
                 .Distinct()
@@ -126,7 +123,7 @@ public class FeedController : ControllerBase
             .Select(g => new
             {
                 VideoId = g.Key,
-                Seconds = g.Sum(x => x.Seconds)
+                Seconds = (double?)g.Sum(x => x.Seconds) ?? 0
             });
 
         //-----------------------------------------
@@ -148,47 +145,43 @@ public class FeedController : ControllerBase
         //-----------------------------------------
 
         var candidates = await (
-      from n in baseQuery
+            from n in baseQuery
 
-      join lc in likeCountsQuery
-          on n.VideoId equals lc.VideoId into likesJoin
-      from lc in likesJoin.DefaultIfEmpty()
+            join lc in likeCountsQuery
+                on n.VideoId equals lc.VideoId into likesJoin
+            from lc in likesJoin.DefaultIfEmpty()
 
-      join vc in viewCountsQuery
-          on n.VideoId equals vc.VideoId into viewsJoin
-      from vc in viewsJoin.DefaultIfEmpty()
+            join vc in viewCountsQuery
+                on n.VideoId equals vc.VideoId into viewsJoin
+            from vc in viewsJoin.DefaultIfEmpty()
 
-      join wc in watchTimesQuery
-          on n.VideoId equals wc.VideoId into watchJoin
-      from wc in watchJoin.DefaultIfEmpty()
+            join wc in watchTimesQuery
+                on n.VideoId equals wc.VideoId into watchJoin
+            from wc in watchJoin.DefaultIfEmpty()
 
-      select new FeedVideoCandidate
-      {
-          NodeId = n.Id,
-          VideoId = n.VideoId,
-          UserId = n.Video.UserId,
+            select new FeedVideoCandidate
+            {
+                NodeId = n.Id,
+                VideoId = n.VideoId,
+                UserId = n.Video.UserId,
 
-          Url = n.Video.Url ?? "",
-          ThumbnailUrl = n.Video.ThumbnailUrl,
+                Url = n.Video.Url ?? "",
+                ThumbnailUrl = n.Video.ThumbnailUrl,
+                CreatedAt = n.Video.CreatedAt,
 
-          CreatedAt = n.Video.CreatedAt,
+                Username = n.Video.User.Username ?? "",
+                AvatarUrl = n.Video.User.AvatarUrl,
+                Bio = n.Video.User.Bio,
 
-          Username = n.Video.User.Username ?? "",
-          AvatarUrl = n.Video.User.AvatarUrl,
-          Bio = n.Video.User.Bio,
+                VideoCategoryId = n.Video.VideoCategoryId,
 
-          VideoCategoryId = n.Video.VideoCategoryId,
-
-          LikesCount = lc != null ? lc.Count : 0,
-          ViewsCount = vc != null ? vc.Count : 0,
-
-          WatchSeconds = wc != null && wc.Seconds != null
-              ? wc.Seconds
-              : 0
-      })
-      .OrderByDescending(x => x.CreatedAt)
-      .Take(300)
-      .ToListAsync();
+                LikesCount = lc != null ? lc.Count : 0,
+                ViewsCount = vc != null ? vc.Count : 0,
+                WatchSeconds = wc == null ? 0 : wc.Seconds
+            })
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(300)
+            .ToListAsync();
 
         //-----------------------------------------
         // SCORING
@@ -249,10 +242,7 @@ public class FeedController : ControllerBase
                 .ToList();
         }
 
-        var pageVideos = ordered
-            .Take(pageSize)
-            .ToList();
-
+        var pageVideos = ordered.Take(pageSize).ToList();
         var nextCursor = pageVideos.LastOrDefault()?.NodeId;
 
         //-----------------------------------------
@@ -318,7 +308,7 @@ public class FeedController : ControllerBase
         var result = new
         {
             items = feed,
-            nextCursor = nextCursor
+            nextCursor
         };
 
         await _redis.StringSetAsync(
@@ -348,7 +338,6 @@ public class FeedController : ControllerBase
 
         public int LikesCount { get; set; }
         public int ViewsCount { get; set; }
-
         public double WatchSeconds { get; set; }
 
         public bool IsBoosted { get; set; }
