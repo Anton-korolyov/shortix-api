@@ -69,64 +69,6 @@ public class FeedController : ControllerBase
                 .ToHashSet();
 
         //-----------------------------------------
-        // USER INTERESTED CATEGORIES
-        //-----------------------------------------
-
-        var interestedCategories = currentUserId == null
-            ? new HashSet<Guid>()
-            : (await _db.Likes
-                .AsNoTracking()
-                .Where(l => l.UserId == currentUserId)
-                .Join(_db.StoryNodes,
-                    l => l.StoryNodeId,
-                    n => n.Id,
-                    (l, n) => n.VideoId)
-                .Join(_db.Videos,
-                    videoId => videoId,
-                    v => v.Id,
-                    (videoId, v) => v.VideoCategoryId)
-                .Where(c => c != null)
-                .Select(c => c!.Value)
-                .Distinct()
-                .ToListAsync())
-                .ToHashSet();
-
-        //-----------------------------------------
-        // AGGREGATIONS
-        //-----------------------------------------
-
-        var likeCountsQuery = _db.Likes
-            .AsNoTracking()
-            .Join(_db.StoryNodes,
-                l => l.StoryNodeId,
-                n => n.Id,
-                (l, n) => new { n.VideoId })
-            .GroupBy(x => x.VideoId)
-            .Select(g => new
-            {
-                VideoId = g.Key,
-                Count = g.Count()
-            });
-
-        var viewCountsQuery = _db.VideoViews
-            .AsNoTracking()
-            .GroupBy(x => x.VideoId)
-            .Select(g => new
-            {
-                VideoId = g.Key,
-                Count = g.Count()
-            });
-
-        var watchTimesQuery = _db.WatchTimes
-            .AsNoTracking()
-            .GroupBy(x => x.VideoId)
-            .Select(g => new
-            {
-                VideoId = g.Key,
-                Seconds = (double?)g.Sum(x => x.Seconds) ?? 0
-            });
-
-        //-----------------------------------------
         // BASE QUERY
         //-----------------------------------------
 
@@ -141,47 +83,95 @@ public class FeedController : ControllerBase
             baseQuery = baseQuery.Where(n => n.Video.VideoCategoryId == categoryId);
 
         //-----------------------------------------
-        // CANDIDATES
+        // LOAD VIDEOS
         //-----------------------------------------
 
-        var candidates = await (
-            from n in baseQuery
-
-            join lc in likeCountsQuery
-                on n.VideoId equals lc.VideoId into likesJoin
-            from lc in likesJoin.DefaultIfEmpty()
-
-            join vc in viewCountsQuery
-                on n.VideoId equals vc.VideoId into viewsJoin
-            from vc in viewsJoin.DefaultIfEmpty()
-
-            join wc in watchTimesQuery
-                on n.VideoId equals wc.VideoId into watchJoin
-            from wc in watchJoin.DefaultIfEmpty()
-
-            select new FeedVideoCandidate
+        var videos = await baseQuery
+            .OrderByDescending(n => n.Video.CreatedAt)
+            .Take(300)
+            .Select(n => new
             {
                 NodeId = n.Id,
                 VideoId = n.VideoId,
                 UserId = n.Video.UserId,
-
-                Url = n.Video.Url ?? "",
+                Url = n.Video.Url,
                 ThumbnailUrl = n.Video.ThumbnailUrl,
                 CreatedAt = n.Video.CreatedAt,
-
-                Username = n.Video.User.Username ?? "",
+                Username = n.Video.User.Username,
                 AvatarUrl = n.Video.User.AvatarUrl,
                 Bio = n.Video.User.Bio,
-
-                VideoCategoryId = n.Video.VideoCategoryId,
-
-                LikesCount = lc != null ? lc.Count : 0,
-                ViewsCount = vc != null ? vc.Count : 0,
-                WatchSeconds = wc == null ? 0 : wc.Seconds
+                CategoryId = n.Video.VideoCategoryId
             })
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(300)
             .ToListAsync();
+
+        var videoIds = videos.Select(v => v.VideoId).ToList();
+
+        //-----------------------------------------
+        // LIKE COUNTS
+        //-----------------------------------------
+
+        var likes = await _db.Likes
+            .Join(_db.StoryNodes,
+                l => l.StoryNodeId,
+                n => n.Id,
+                (l, n) => new { n.VideoId })
+            .Where(x => videoIds.Contains(x.VideoId))
+            .GroupBy(x => x.VideoId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
+
+        //-----------------------------------------
+        // VIEW COUNTS
+        //-----------------------------------------
+
+        var views = await _db.VideoViews
+            .Where(v => videoIds.Contains(v.VideoId))
+            .GroupBy(v => v.VideoId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
+
+        //-----------------------------------------
+        // WATCH TIME
+        //-----------------------------------------
+
+        var watch = await _db.WatchTimes
+            .Where(w => videoIds.Contains(w.VideoId))
+            .GroupBy(w => w.VideoId)
+            .Select(g => new { g.Key, Seconds = g.Sum(x => x.Seconds) })
+            .ToDictionaryAsync(x => x.Key, x => x.Seconds);
+
+        //-----------------------------------------
+        // BUILD CANDIDATES
+        //-----------------------------------------
+
+        var candidates = new List<FeedVideoCandidate>();
+
+        foreach (var v in videos)
+        {
+            candidates.Add(new FeedVideoCandidate
+            {
+                NodeId = v.NodeId,
+                VideoId = v.VideoId,
+                UserId = v.UserId,
+
+                Url = v.Url ?? "",
+                ThumbnailUrl = v.ThumbnailUrl,
+                CreatedAt = v.CreatedAt,
+
+                Username = v.Username ?? "",
+                AvatarUrl = v.AvatarUrl,
+                Bio = v.Bio,
+
+                VideoCategoryId = v.CategoryId,
+
+                LikesCount = likes.GetValueOrDefault(v.VideoId),
+                ViewsCount = views.GetValueOrDefault(v.VideoId),
+                WatchSeconds = watch.GetValueOrDefault(v.VideoId),
+
+                IsBoosted = boostedVideoIds.Contains(v.VideoId),
+                IsFollowingAuthor = followingIds.Contains(v.UserId)
+            });
+        }
 
         //-----------------------------------------
         // SCORING
@@ -189,13 +179,6 @@ public class FeedController : ControllerBase
 
         foreach (var item in candidates)
         {
-            item.IsBoosted = boostedVideoIds.Contains(item.VideoId);
-            item.IsFollowingAuthor = followingIds.Contains(item.UserId);
-
-            item.CategoryMatch =
-                item.VideoCategoryId.HasValue &&
-                interestedCategories.Contains(item.VideoCategoryId.Value);
-
             var ageHours = Math.Max(1, (now - item.CreatedAt).TotalHours);
 
             double freshnessScore =
@@ -204,22 +187,13 @@ public class FeedController : ControllerBase
                 ageHours <= 72 ? 12 :
                 4;
 
-            var likesScore = item.LikesCount * 3.5;
-            var viewsScore = item.ViewsCount * 0.25;
-            var watchScore = item.WatchSeconds * 0.02;
-
-            var boostScore = item.IsBoosted ? 35 : 0;
-            var followingScore = item.IsFollowingAuthor ? 20 : 0;
-            var categoryScore = item.CategoryMatch ? 18 : 0;
-
             item.Score =
                 freshnessScore +
-                likesScore +
-                viewsScore +
-                watchScore +
-                boostScore +
-                followingScore +
-                categoryScore;
+                item.LikesCount * 3.5 +
+                item.ViewsCount * 0.25 +
+                item.WatchSeconds * 0.02 +
+                (item.IsBoosted ? 35 : 0) +
+                (item.IsFollowingAuthor ? 20 : 0);
         }
 
         //-----------------------------------------
@@ -246,68 +220,12 @@ public class FeedController : ControllerBase
         var nextCursor = pageVideos.LastOrDefault()?.NodeId;
 
         //-----------------------------------------
-        // ADS
-        //-----------------------------------------
-
-        var ads = await _db.Ads
-            .Where(a =>
-                a.Active &&
-                a.StartDate <= now &&
-                a.EndDate >= now &&
-                a.Views < a.Budget)
-            .OrderBy(a => a.Views)
-            .Take(10)
-            .ToListAsync();
-
-        //-----------------------------------------
-        // MERGE ADS
-        //-----------------------------------------
-
-        List<object> feed = new();
-        int adIndex = 0;
-        int adEvery = 7;
-
-        foreach (var video in pageVideos)
-        {
-            feed.Add(new
-            {
-                type = "video",
-                id = video.NodeId,
-                videoId = video.VideoId,
-                url = video.Url,
-                thumbnailUrl = video.ThumbnailUrl,
-                username = video.Username,
-                avatarUrl = video.AvatarUrl,
-                bio = video.Bio,
-                score = video.Score
-            });
-
-            if (feed.Count % adEvery == 0 && ads.Count > 0)
-            {
-                var ad = ads[adIndex % ads.Count];
-
-                feed.Add(new
-                {
-                    type = "ad",
-                    id = ad.Id,
-                    mediaUrl = ad.MediaUrl,
-                    link = ad.Link
-                });
-
-                ad.Views++;
-                adIndex++;
-            }
-        }
-
-        await _db.SaveChangesAsync();
-
-        //-----------------------------------------
         // RESULT
         //-----------------------------------------
 
         var result = new
         {
-            items = feed,
+            items = pageVideos,
             nextCursor
         };
 
@@ -342,7 +260,6 @@ public class FeedController : ControllerBase
 
         public bool IsBoosted { get; set; }
         public bool IsFollowingAuthor { get; set; }
-        public bool CategoryMatch { get; set; }
 
         public double Score { get; set; }
     }
