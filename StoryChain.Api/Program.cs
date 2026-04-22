@@ -45,7 +45,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var redisConnection =
         builder.Configuration.GetConnectionString("Redis") ??
-        "localhost:6379";
+        "tredo-redis:6379";
 
     return ConnectionMultiplexer.Connect(redisConnection);
 });
