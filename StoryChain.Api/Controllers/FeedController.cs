@@ -317,6 +317,7 @@ public class FeedController : ControllerBase
 
         public int LikesCount { get; set; }
         public int ViewsCount { get; set; }
+
         public double WatchSeconds { get; set; }
 
         public bool IsBoosted { get; set; }
