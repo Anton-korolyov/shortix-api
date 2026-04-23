@@ -23,6 +23,7 @@ public class FeedController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get(
         Guid? cursor = null,
+        Guid? videoId = null,
         int pageSize = 10,
         Guid? categoryId = null,
         bool following = false)
@@ -36,7 +37,7 @@ public class FeedController : ControllerBase
         if (idClaim != null && Guid.TryParse(idClaim.Value, out var parsed))
             currentUserId = parsed;
 
-        var cacheKey = $"feed:{currentUserId}:{cursor}:{pageSize}:{categoryId}:{following}";
+        var cacheKey = $"feed:{currentUserId}:{cursor}:{videoId}:{pageSize}:{categoryId}:{following}";
         var cached = await _redis.StringGetAsync(cacheKey);
 
         if (!cached.IsNullOrEmpty)
@@ -122,7 +123,7 @@ public class FeedController : ControllerBase
         var videoIds = videos.Select(v => v.VideoId).ToList();
 
         //-----------------------------------------
-        // FLOW (hasChildren)
+        // FLOW
         //-----------------------------------------
 
         var childrenNodes = await _db.StoryNodes
@@ -233,6 +234,20 @@ public class FeedController : ControllerBase
             .ToList();
 
         //-----------------------------------------
+        // FIND VIDEO POSITION
+        //-----------------------------------------
+
+        int startIndex = 0;
+
+        if (videoId != null)
+        {
+            var pos = ordered.FindIndex(x => x.VideoId == videoId.Value);
+
+            if (pos >= 0)
+                startIndex = pos;
+        }
+
+        //-----------------------------------------
         // CURSOR PAGINATION
         //-----------------------------------------
 
@@ -248,6 +263,7 @@ public class FeedController : ControllerBase
         //-----------------------------------------
 
         var pageVideos = ordered
+            .Skip(startIndex)
             .Take(pageSize)
             .Select(video => new
             {
@@ -270,7 +286,8 @@ public class FeedController : ControllerBase
         var result = new
         {
             items = pageVideos,
-            nextCursor
+            nextCursor,
+            index = startIndex % pageSize
         };
 
         await _redis.StringSetAsync(
