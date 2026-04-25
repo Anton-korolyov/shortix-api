@@ -241,7 +241,7 @@ public class FeedController : ControllerBase
 
         if (videoId != null)
         {
-            var pos = ordered.FindIndex(x => x.VideoId == videoId.Value);
+            var pos = ordered.FindIndex(x => x.NodeId == videoId.Value);
 
             if (pos >= 0)
                 startIndex = pos;
