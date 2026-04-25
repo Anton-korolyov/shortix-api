@@ -22,11 +22,11 @@ public class FeedController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get(
-        Guid? cursor = null,
-        Guid? videoId = null,
-        int pageSize = 10,
-        Guid? categoryId = null,
-        bool following = false)
+       Guid? cursor = null,
+       Guid? videoId = null,
+       int pageSize = 10,
+       Guid? categoryId = null,
+       bool following = false)
     {
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 50) pageSize = 50;
