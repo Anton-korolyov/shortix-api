@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StoryChain.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+721d9de4d12bbdae6e7af859d1a2e771417db6b4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3d899ae611b9514f823fe2cc67a8acc833e1a55")]
 [assembly: System.Reflection.AssemblyProductAttribute("StoryChain.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StoryChain.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
