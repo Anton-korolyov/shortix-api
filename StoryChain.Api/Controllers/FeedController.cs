@@ -120,24 +120,26 @@ public class FeedController : ControllerBase
 
         var pageStart1 = (startIndex1 / pageSize) * pageSize;
 
+        var skip = Math.Max(0, pageStart1 - pageSize);
+
         var videos = await baseQuery
-       .OrderByDescending(n => n.Video.CreatedAt)
-       .Skip(pageStart1)
-        .Take(300)
-       .Select(n => new
-       {
-           NodeId = n.Id,
-           VideoId = n.VideoId,
-           UserId = n.Video.UserId,
-           Url = n.Video.Url,
-           ThumbnailUrl = n.Video.ThumbnailUrl,
-           CreatedAt = n.Video.CreatedAt,
-           Username = n.Video.User.Username,
-           AvatarUrl = n.Video.User.AvatarUrl,
-           Bio = n.Video.User.Bio,
-           CategoryId = n.Video.VideoCategoryId
-       })
-       .ToListAsync();
+            .OrderByDescending(n => n.Video.CreatedAt)
+            .Skip(skip)
+            .Take(300)
+            .Select(n => new
+            {
+                NodeId = n.Id,
+                VideoId = n.VideoId,
+                UserId = n.Video.UserId,
+                Url = n.Video.Url,
+                ThumbnailUrl = n.Video.ThumbnailUrl,
+                CreatedAt = n.Video.CreatedAt,
+                Username = n.Video.User.Username,
+                AvatarUrl = n.Video.User.AvatarUrl,
+                Bio = n.Video.User.Bio,
+                CategoryId = n.Video.VideoCategoryId
+            })
+            .ToListAsync();
 
         var nodeIds = videos.Select(v => v.NodeId).ToList();
         var videoIds = videos.Select(v => v.VideoId).ToList();
@@ -290,7 +292,7 @@ public class FeedController : ControllerBase
         {
             items = pageVideos,
             nextCursor,
-            index = startIndex1 % pageSize
+            index = startIndex1 - pageStart1
         };
 
         await _redis.StringSetAsync(
