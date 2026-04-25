@@ -22,11 +22,11 @@ public class FeedController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get(
-       Guid? cursor = null,
-       Guid? videoId = null,
-       int pageSize = 10,
-       Guid? categoryId = null,
-       bool following = false)
+     Guid? cursor = null,
+     Guid? videoId = null,
+     int pageSize = 10,
+     Guid? categoryId = null,
+     bool following = false)
     {
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 50) pageSize = 50;
@@ -36,8 +36,6 @@ public class FeedController : ControllerBase
         var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (idClaim != null && Guid.TryParse(idClaim.Value, out var parsed))
             currentUserId = parsed;
-
-        var now = DateTime.UtcNow;
 
         //-----------------------------------------
         // BASE QUERY
@@ -102,20 +100,6 @@ public class FeedController : ControllerBase
             .ToListAsync();
 
         //-----------------------------------------
-        // FLOW DETECTION
-        //-----------------------------------------
-
-        var nodeIds = videos.Select(v => v.NodeId).ToList();
-
-        var childrenNodes = await _db.StoryNodes
-            .Where(x => x.ParentNodeId != null && nodeIds.Contains(x.ParentNodeId.Value))
-            .Select(x => x.ParentNodeId!.Value)
-            .Distinct()
-            .ToListAsync();
-
-        var childrenSet = childrenNodes.ToHashSet();
-
-        //-----------------------------------------
         // SORT
         //-----------------------------------------
 
@@ -137,7 +121,7 @@ public class FeedController : ControllerBase
         }
 
         //-----------------------------------------
-        // INDEX
+        // FIND INDEX
         //-----------------------------------------
 
         int index = startIndex - pageStart;
@@ -157,8 +141,7 @@ public class FeedController : ControllerBase
                 thumbnailUrl = video.ThumbnailUrl,
                 username = video.Username,
                 avatarUrl = video.AvatarUrl,
-                bio = video.Bio,
-                hasChildren = childrenSet.Contains(video.NodeId)
+                bio = video.Bio
             })
             .ToList<object>();
 
