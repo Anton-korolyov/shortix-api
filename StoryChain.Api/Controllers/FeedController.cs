@@ -102,20 +102,20 @@ public class FeedController : ControllerBase
         //-----------------------------------------
         int startIndex1 = 0;
 
-        if (videoId != null)
-        {
-            var target = await baseQuery
-                .Where(n => n.Id == videoId)
-                .Select(n => new { n.Video.CreatedAt })
-                .FirstOrDefaultAsync();
+        //if (videoId != null)
+        //{
+        //    var target = await baseQuery
+        //        .Where(n => n.VideoId == videoId)
+        //        .Select(n => new { n.Video.CreatedAt })
+        //        .FirstOrDefaultAsync();
 
-            if (target != null)
-            {
-                startIndex1 = await baseQuery
-                    .Where(n => n.Video.CreatedAt > target.CreatedAt)
-                    .CountAsync();
-            }
-        }
+        //    if (target != null)
+        //    {
+        //        startIndex1 = await baseQuery
+        //            .Where(n => n.Video.CreatedAt > target.CreatedAt)
+        //            .CountAsync();
+        //    }
+        //}
 
 
         var pageStart1 = (startIndex1 / pageSize) * pageSize;
@@ -259,7 +259,7 @@ public class FeedController : ControllerBase
 
         if (videoId != null)
         {
-            var pos = ordered.FindIndex(x => x.NodeId == videoId.Value);
+            var pos = ordered.FindIndex(x => x.VideoId == videoId.Value);
             if (pos >= 0)
                 index = pos;
         }
