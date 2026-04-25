@@ -100,23 +100,26 @@ public class FeedController : ControllerBase
         //-----------------------------------------
         // LOAD VIDEOS
         //-----------------------------------------
+        //-----------------------------------------
+        // LOAD VIDEOS
+        //-----------------------------------------
+
         int startIndex1 = 0;
 
-        //if (videoId != null)
-        //{
-        //    var target = await baseQuery
-        //        .Where(n => n.VideoId == videoId)
-        //        .Select(n => new { n.Video.CreatedAt })
-        //        .FirstOrDefaultAsync();
+        if (videoId != null)
+        {
+            var target = await baseQuery
+                .Where(n => n.VideoId == videoId)
+                .Select(n => new { n.Video.CreatedAt })
+                .FirstOrDefaultAsync();
 
-        //    if (target != null)
-        //    {
-        //        startIndex1 = await baseQuery
-        //            .Where(n => n.Video.CreatedAt > target.CreatedAt)
-        //            .CountAsync();
-        //    }
-        //}
-
+            if (target != null)
+            {
+                startIndex1 = await baseQuery
+                    .Where(n => n.Video.CreatedAt > target.CreatedAt)
+                    .CountAsync();
+            }
+        }
 
         var pageStart1 = (startIndex1 / pageSize) * pageSize;
 
@@ -125,7 +128,7 @@ public class FeedController : ControllerBase
         var videos = await baseQuery
             .OrderByDescending(n => n.Video.CreatedAt)
             .Skip(skip)
-            .Take(300)
+            .Take(80)
             .Select(n => new
             {
                 NodeId = n.Id,
@@ -255,14 +258,9 @@ public class FeedController : ControllerBase
             .ThenByDescending(x => x.NodeId)
             .ToList();
 
-        int index = 0;
+   
 
-        if (videoId != null)
-        {
-            var pos = ordered.FindIndex(x => x.VideoId == videoId.Value);
-            if (pos >= 0)
-                index = pos;
-        }
+       
         //-----------------------------------------
         // CURSOR PAGINATION
         //-----------------------------------------
@@ -274,6 +272,18 @@ public class FeedController : ControllerBase
                 ordered = ordered.Skip(cursorIndex + 1).ToList();
         }
 
+        //-----------------------------------------
+        // FIND INDEX
+        //-----------------------------------------
+
+        int index = 0;
+
+        if (videoId != null)
+        {
+            var pos = ordered.FindIndex(v => v.VideoId == videoId.Value);
+            if (pos >= 0)
+                index = pos;
+        }
         //-----------------------------------------
         // PAGE
         //-----------------------------------------
