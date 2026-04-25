@@ -258,9 +258,18 @@ public class FeedController : ControllerBase
             .ThenByDescending(x => x.NodeId)
             .ToList();
 
-   
+        if (videoId != null)
+        {
+            var target = ordered.FirstOrDefault(v => v.VideoId == videoId.Value);
 
-       
+            if (target != null)
+            {
+                ordered.Remove(target);
+                ordered.Insert(0, target);
+            }
+        }
+
+
         //-----------------------------------------
         // CURSOR PAGINATION
         //-----------------------------------------
@@ -280,7 +289,8 @@ public class FeedController : ControllerBase
 
         if (videoId != null)
         {
-            var pos = candidates.FindIndex(v => v.VideoId == videoId.Value);
+            var pos = ordered.FindIndex(v => v.VideoId == videoId.Value);
+
             if (pos >= 0)
                 index = pos;
         }
