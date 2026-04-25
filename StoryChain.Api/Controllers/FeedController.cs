@@ -254,6 +254,15 @@ public class FeedController : ControllerBase
             .ThenByDescending(x => x.CreatedAt)
             .ThenByDescending(x => x.NodeId)
             .ToList();
+
+        int index = 0;
+
+        if (videoId != null)
+        {
+            var pos = ordered.FindIndex(x => x.NodeId == videoId.Value);
+            if (pos >= 0)
+                index = pos;
+        }
         //-----------------------------------------
         // CURSOR PAGINATION
         //-----------------------------------------
@@ -292,7 +301,7 @@ public class FeedController : ControllerBase
         {
             items = pageVideos,
             nextCursor,
-            index = startIndex1 - pageStart1
+            index = index
         };
 
         await _redis.StringSetAsync(
