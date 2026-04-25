@@ -261,23 +261,23 @@ public class FeedController : ControllerBase
         //-----------------------------------------
         // PAGE
         //-----------------------------------------
-
+        var pageStart = (startIndex / pageSize) * pageSize;
         var pageVideos = ordered
-            .Skip(startIndex)
-            .Take(pageSize)
-            .Select(video => new
-            {
-                type = "video",
-                id = video.NodeId,
-                videoId = video.VideoId,
-                url = video.Url,
-                thumbnailUrl = video.ThumbnailUrl,
-                username = video.Username,
-                avatarUrl = video.AvatarUrl,
-                bio = video.Bio,
-                hasChildren = video.HasChildren
-            })
-            .ToList<object>();
+         .Skip(pageStart)
+         .Take(pageSize)
+         .Select(video => new
+         {
+             type = "video",
+             id = video.NodeId,
+             videoId = video.VideoId,
+             url = video.Url,
+             thumbnailUrl = video.ThumbnailUrl,
+             username = video.Username,
+             avatarUrl = video.AvatarUrl,
+             bio = video.Bio,
+             hasChildren = video.HasChildren
+         })
+         .ToList<object>();
 
         var nextCursor = pageVideos.Count > 0
             ? ((dynamic)pageVideos.Last()).id
