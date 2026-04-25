@@ -100,9 +100,6 @@ public class FeedController : ControllerBase
         //-----------------------------------------
         // LOAD VIDEOS
         //-----------------------------------------
-        //-----------------------------------------
-        // LOAD VIDEOS
-        //-----------------------------------------
 
         int startIndex1 = 0;
 
@@ -122,7 +119,6 @@ public class FeedController : ControllerBase
         }
 
         var pageStart1 = (startIndex1 / pageSize) * pageSize;
-
         var skip = Math.Max(0, pageStart1 - pageSize);
 
         var videos = await baseQuery
@@ -258,18 +254,6 @@ public class FeedController : ControllerBase
             .ThenByDescending(x => x.NodeId)
             .ToList();
 
-        if (videoId != null)
-        {
-            var target = ordered.FirstOrDefault(v => v.VideoId == videoId.Value);
-
-            if (target != null)
-            {
-                ordered.Remove(target);
-                ordered.Insert(0, target);
-            }
-        }
-
-
         //-----------------------------------------
         // CURSOR PAGINATION
         //-----------------------------------------
@@ -294,24 +278,26 @@ public class FeedController : ControllerBase
             if (pos >= 0)
                 index = pos;
         }
+
         //-----------------------------------------
         // PAGE
         //-----------------------------------------
+
         var pageVideos = ordered
-      .Take(pageSize)
-           .Select(video => new
-           {
-               type = "video",
-               id = video.NodeId,
-               videoId = video.VideoId,
-               url = video.Url,
-               thumbnailUrl = video.ThumbnailUrl,
-               username = video.Username,
-               avatarUrl = video.AvatarUrl,
-               bio = video.Bio,
-               hasChildren = video.HasChildren
-           })
-         .ToList<object>();
+            .Take(pageSize)
+            .Select(video => new
+            {
+                type = "video",
+                id = video.NodeId,
+                videoId = video.VideoId,
+                url = video.Url,
+                thumbnailUrl = video.ThumbnailUrl,
+                username = video.Username,
+                avatarUrl = video.AvatarUrl,
+                bio = video.Bio,
+                hasChildren = video.HasChildren
+            })
+            .ToList<object>();
 
         var nextCursor = pageVideos.Count > 0
             ? ((dynamic)pageVideos.Last()).id
@@ -321,7 +307,7 @@ public class FeedController : ControllerBase
         {
             items = pageVideos,
             nextCursor,
-            index = index
+            index
         };
 
         await _redis.StringSetAsync(
