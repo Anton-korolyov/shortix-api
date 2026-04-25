@@ -101,7 +101,7 @@ public class FeedController : ControllerBase
         // LOAD VIDEOS
         //-----------------------------------------
 
-        int startIndex1 = 0;
+        int startIndex = 0;
 
         if (videoId != null)
         {
@@ -112,19 +112,18 @@ public class FeedController : ControllerBase
 
             if (target != null)
             {
-                startIndex1 = await baseQuery
+                startIndex = await baseQuery
                     .Where(n => n.Video.CreatedAt > target.CreatedAt)
                     .CountAsync();
             }
         }
 
-        var pageStart1 = (startIndex1 / pageSize) * pageSize;
-        var skip = Math.Max(0, pageStart1 - pageSize);
+        var skip = Math.Max(0, startIndex - pageSize);
 
         var videos = await baseQuery
             .OrderByDescending(n => n.Video.CreatedAt)
             .Skip(skip)
-            .Take(80)
+            .Take(pageSize * 5)
             .Select(n => new
             {
                 NodeId = n.Id,
@@ -144,7 +143,7 @@ public class FeedController : ControllerBase
         var videoIds = videos.Select(v => v.VideoId).ToList();
 
         //-----------------------------------------
-        // FLOW
+        // FLOW (HAS CHILDREN)
         //-----------------------------------------
 
         var childrenNodes = await _db.StoryNodes
@@ -255,18 +254,7 @@ public class FeedController : ControllerBase
             .ToList();
 
         //-----------------------------------------
-        // CURSOR PAGINATION
-        //-----------------------------------------
-
-        if (cursor != null)
-        {
-            var cursorIndex = ordered.FindIndex(x => x.NodeId == cursor.Value);
-            if (cursorIndex >= 0)
-                ordered = ordered.Skip(cursorIndex + 1).ToList();
-        }
-
-        //-----------------------------------------
-        // FIND INDEX
+        // OPEN SPECIFIC VIDEO
         //-----------------------------------------
 
         int index = 0;
@@ -276,7 +264,26 @@ public class FeedController : ControllerBase
             var pos = ordered.FindIndex(v => v.VideoId == videoId.Value);
 
             if (pos >= 0)
-                index = pos;
+            {
+                ordered = ordered
+                    .Skip(pos)
+                    .Concat(ordered.Take(pos))
+                    .ToList();
+
+                index = 0;
+            }
+        }
+
+        //-----------------------------------------
+        // CURSOR PAGINATION
+        //-----------------------------------------
+
+        if (cursor != null && videoId == null)
+        {
+            var cursorIndex = ordered.FindIndex(x => x.NodeId == cursor.Value);
+
+            if (cursorIndex >= 0)
+                ordered = ordered.Skip(cursorIndex + 1).ToList();
         }
 
         //-----------------------------------------
