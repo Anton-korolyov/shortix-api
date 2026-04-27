@@ -274,9 +274,20 @@ public class FeedController : ControllerBase
         // PAGE
         //-----------------------------------------
 
+        if (videoId != null)
+        {
+            int start = Math.Max(0, index - pageSize / 2);
+
+            ordered = ordered
+                .Skip(start)
+                .ToList();
+
+            index = index - start;
+        }
+
         var pageVideos = ordered
             .Take(pageSize)
-            .Select(video => new
+                    .Select(video => new
             {
                 type = "video",
                 id = video.NodeId,
