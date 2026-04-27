@@ -265,12 +265,7 @@ public class FeedController : ControllerBase
 
             if (pos >= 0)
             {
-                ordered = ordered
-                    .Skip(pos)
-                    .Concat(ordered.Take(pos))
-                    .ToList();
-
-                index = 0;
+                index = pos;
             }
         }
 
