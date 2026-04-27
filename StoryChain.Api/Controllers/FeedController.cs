@@ -22,11 +22,11 @@ public class FeedController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get(
-        Guid? cursor = null,
-        Guid? videoId = null,
-        int pageSize = 10,
-        Guid? categoryId = null,
-        bool following = false)
+     Guid? cursor = null,
+     Guid? videoId = null,
+     int pageSize = 10,
+     Guid? categoryId = null,
+     bool following = false)
     {
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 50) pageSize = 50;
@@ -84,46 +84,37 @@ public class FeedController : ControllerBase
             baseQuery = baseQuery.Where(n => n.Video.VideoCategoryId == categoryId);
 
         if (following)
-        {
-            if (currentUserId == null)
-            {
-                return Ok(new
-                {
-                    items = new List<object>(),
-                    nextCursor = (Guid?)null
-                });
-            }
-
             baseQuery = baseQuery.Where(n => followingIds.Contains(n.Video.UserId));
-        }
 
         //-----------------------------------------
-        // LOAD VIDEOS
+        // FIND VIDEO POSITION
         //-----------------------------------------
 
         int startIndex = 0;
 
         if (videoId != null)
         {
-            var target = await baseQuery
+            var targetDate = await baseQuery
                 .Where(n => n.VideoId == videoId)
-                .Select(n => new { n.Video.CreatedAt })
+                .Select(n => n.Video.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (target != null)
+            if (targetDate != default)
             {
                 startIndex = await baseQuery
-                    .Where(n => n.Video.CreatedAt > target.CreatedAt)
+                    .Where(n => n.Video.CreatedAt > targetDate)
                     .CountAsync();
             }
         }
 
-        var skip = Math.Max(0, startIndex - pageSize);
+        //-----------------------------------------
+        // LOAD WINDOW AROUND VIDEO
+        //-----------------------------------------
 
         var videos = await baseQuery
             .OrderByDescending(n => n.Video.CreatedAt)
-            .Skip(skip)
-            .Take(pageSize * 5)
+            .Skip(Math.Max(0, startIndex - pageSize))
+            .Take(pageSize * 10)
             .Select(n => new
             {
                 NodeId = n.Id,
@@ -254,7 +245,7 @@ public class FeedController : ControllerBase
             .ToList();
 
         //-----------------------------------------
-        // OPEN SPECIFIC VIDEO
+        // FIND INDEX
         //-----------------------------------------
 
         int index = 0;
@@ -264,9 +255,7 @@ public class FeedController : ControllerBase
             var pos = ordered.FindIndex(v => v.VideoId == videoId.Value);
 
             if (pos >= 0)
-            {
                 index = pos;
-            }
         }
 
         //-----------------------------------------
