@@ -3,16 +3,24 @@
   "WorkspaceRootPath": "C:\\projects\\myStories\\backend\\StoryChain\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\models\\commentlike.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\models\\commentlike.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\controllers\\feedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\controllers\\feedcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\controllers\\likecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\controllers\\likecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\controllers\\paymentcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -65,10 +73,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\models\\video.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\models\\video.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|solutionrelative:storychain.api\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{DD4D3093-9019-422C-9143-55085E317553}|StoryChain.Api\\StoryChain.Api.csproj|c:\\projects\\mystories\\backend\\storychain\\storychain.api\\controllers\\flowcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -138,7 +142,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -150,31 +154,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Ad.cs",
-              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Ad.cs",
-              "RelativeDocumentMoniker": "StoryChain.Api\\Models\\Ad.cs",
-              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Ad.cs",
-              "RelativeToolTip": "StoryChain.Api\\Models\\Ad.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAyAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "CommentLike.cs",
+              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\CommentLike.cs",
+              "RelativeDocumentMoniker": "StoryChain.Api\\Models\\CommentLike.cs",
+              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\CommentLike.cs",
+              "RelativeToolTip": "StoryChain.Api\\Models\\CommentLike.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-17T11:36:18.154Z"
+              "WhenOpened": "2026-04-29T01:42:32.68Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "FollowController.cs",
-              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FollowController.cs",
-              "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\FollowController.cs",
-              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FollowController.cs",
-              "RelativeToolTip": "StoryChain.Api\\Controllers\\FollowController.cs",
-              "ViewState": "AgIAAJ0AAAAAAAAAAAAmwMQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-15T03:53:07.42Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "VideoController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\VideoController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\VideoController.cs",
@@ -186,20 +179,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\appsettings.json",
               "RelativeDocumentMoniker": "StoryChain.Api\\appsettings.json",
               "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\appsettings.json",
               "RelativeToolTip": "StoryChain.Api\\appsettings.json",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAACIAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAACQAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-02-23T11:36:22.35Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "LikeController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\LikeController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\LikeController.cs",
@@ -207,12 +200,11 @@
               "RelativeToolTip": "StoryChain.Api\\Controllers\\LikeController.cs",
               "ViewState": "AgIAAH4AAAAAAAAAAAAkwJUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-12T04:19:54.536Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-12T04:19:54.536Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "FeedController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FeedController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\FeedController.cs",
@@ -225,7 +217,44 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 2,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "StoryChain.Api\\Data\\AppDbContext.cs",
+              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "StoryChain.Api\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAkwEoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-22T06:37:31.913Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "FollowController.cs",
+              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FollowController.cs",
+              "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\FollowController.cs",
+              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FollowController.cs",
+              "RelativeToolTip": "StoryChain.Api\\Controllers\\FollowController.cs",
+              "ViewState": "AgIAAJ0AAAAAAAAAAAAmwMQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T03:53:07.42Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Ad.cs",
+              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Ad.cs",
+              "RelativeDocumentMoniker": "StoryChain.Api\\Models\\Ad.cs",
+              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Ad.cs",
+              "RelativeToolTip": "StoryChain.Api\\Models\\Ad.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-17T11:36:18.154Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "AdsController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\AdsController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\AdsController.cs",
@@ -237,7 +266,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "PayPalService.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Services\\PayPalService.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Services\\PayPalService.cs",
@@ -249,7 +278,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "PaymentController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\PaymentController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\PaymentController.cs",
@@ -261,7 +290,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 10,
               "Title": "BoostController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\BoostController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\BoostController.cs",
@@ -273,7 +302,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Program.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Program.cs",
@@ -285,19 +314,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "AppDbContext.cs",
-              "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Data\\AppDbContext.cs",
-              "RelativeDocumentMoniker": "StoryChain.Api\\Data\\AppDbContext.cs",
-              "ToolTip": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Data\\AppDbContext.cs",
-              "RelativeToolTip": "StoryChain.Api\\Data\\AppDbContext.cs",
-              "ViewState": "AgIAAD0AAAAAAAAAAAAqwEoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-22T06:37:31.913Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "VideoBoost.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\VideoBoost.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\VideoBoost.cs",
@@ -309,7 +326,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 31,
               "Title": "20260422071338_AddAdStats.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Migrations\\20260422071338_AddAdStats.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Migrations\\20260422071338_AddAdStats.cs",
@@ -321,7 +338,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 17,
               "Title": "Video.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Video.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\Video.cs",
@@ -333,7 +350,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 16,
               "Title": "WatchTime.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\WatchTime.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\WatchTime.cs",
@@ -345,7 +362,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 15,
               "Title": "VideoView.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\VideoView.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\VideoView.cs",
@@ -357,7 +374,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 14,
               "Title": "Like.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\Like.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\Like.cs",
@@ -369,7 +386,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 32,
               "Title": "20260422063913_AddAdsAndBoosts.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Migrations\\20260422063913_AddAdsAndBoosts.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Migrations\\20260422063913_AddAdsAndBoosts.cs",
@@ -381,7 +398,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "NotificationHub.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Api\\NotificationHub.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Api\\NotificationHub.cs",
@@ -393,7 +410,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "FlowController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\FlowController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\FlowController.cs",
@@ -405,7 +422,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "NotificationController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\NotificationController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\NotificationController.cs",
@@ -417,7 +434,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 20,
               "Title": "ExploreController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\ExploreController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\ExploreController.cs",
@@ -429,7 +446,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 27,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\AuthController.cs",
@@ -441,7 +458,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 29,
               "Title": "R2VideoService.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Services\\R2VideoService.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Services\\R2VideoService.cs",
@@ -453,7 +470,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 30,
               "Title": "JwtService.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Services\\JwtService.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Services\\JwtService.cs",
@@ -465,7 +482,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "CommentController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\CommentController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\CommentController.cs",
@@ -477,7 +494,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "CommentLikeController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\CommentLikeController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\CommentLikeController.cs",
@@ -489,7 +506,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 24,
               "Title": "ProfileController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\ProfileController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\ProfileController.cs",
@@ -501,7 +518,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 26,
               "Title": "ModerationStatus.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Models\\ModerationStatus.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Models\\ModerationStatus.cs",
@@ -513,7 +530,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 28,
               "Title": "AdminController.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Controllers\\AdminController.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Controllers\\AdminController.cs",
@@ -525,7 +542,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 25,
               "Title": "20260317130132_AddModerationFields.cs",
               "DocumentMoniker": "C:\\projects\\myStories\\backend\\StoryChain\\StoryChain.Api\\Migrations\\20260317130132_AddModerationFields.cs",
               "RelativeDocumentMoniker": "StoryChain.Api\\Migrations\\20260317130132_AddModerationFields.cs",
