@@ -209,6 +209,13 @@ public class FeedController : ControllerBase
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count);
 
+        var commentCounts = await _db.Comments
+             .AsNoTracking()
+             .Where(c => nodeIds.Contains(c.StoryNodeId))
+             .GroupBy(c => c.StoryNodeId)
+             .Select(g => new { g.Key, Count = g.Count() })
+             .ToDictionaryAsync(x => x.Key, x => x.Count);
+
         var views = await _db.VideoViews
             .AsNoTracking()
             .Where(v => videoIds.Contains(v.VideoId))
@@ -242,6 +249,7 @@ public class FeedController : ControllerBase
                 Bio = v.Bio,
                 VideoCategoryId = v.CategoryId,
                 LikesCount = likes.GetValueOrDefault(v.VideoId),
+                CommentsCount = commentCounts.GetValueOrDefault(v.NodeId), 
                 ViewsCount = views.GetValueOrDefault(v.VideoId),
                 WatchSeconds = watch.GetValueOrDefault(v.VideoId),
                 IsBoosted = boostedIds.Contains(v.VideoId),
@@ -337,6 +345,12 @@ public class FeedController : ControllerBase
             .GroupBy(x => x.VideoId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count);
+         var commentCounts = await _db.Comments
+            .AsNoTracking()
+            .Where(c => nodeIds.Contains(c.StoryNodeId))
+            .GroupBy(c => c.StoryNodeId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
 
         return videos.Select(v => new FeedVideoCandidate
         {
@@ -351,6 +365,7 @@ public class FeedController : ControllerBase
             Bio = v.Bio,
             VideoCategoryId = v.CategoryId,
             LikesCount = likes.GetValueOrDefault(v.VideoId),
+            CommentsCount = commentCounts.GetValueOrDefault(v.NodeId),
             HasChildren = childrenSet.Contains(v.NodeId)
         }).ToList();
     }
@@ -365,7 +380,11 @@ public class FeedController : ControllerBase
         username = v.Username,
         avatarUrl = v.AvatarUrl,
         bio = v.Bio,
-        hasChildren = v.HasChildren
+        hasChildren = v.HasChildren,
+          likesCount = v.LikesCount,
+        commentsCount = v.CommentsCount
+        // ✅
+        // ✅
     };
 
     private class FeedVideoCandidate
@@ -387,5 +406,6 @@ public class FeedController : ControllerBase
         public bool IsFollowingAuthor { get; set; }
         public bool HasChildren { get; set; }
         public double Score { get; set; }
+        public int CommentsCount { get; set; }
     }
 }

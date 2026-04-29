@@ -126,9 +126,11 @@ namespace StoryChain.Api.Controllers
                 var t2 = duration * 0.5;
                 var t3 = duration * 0.8;
 
-                await RunFfmpegFrame(tempCompressed, thumb1, t1);
-                await RunFfmpegFrame(tempCompressed, thumb2, t2);
-                await RunFfmpegFrame(tempCompressed, thumb3, t3);
+                await Task.WhenAll(
+          RunFfmpegFrame(tempCompressed, thumb1, t1),
+          RunFfmpegFrame(tempCompressed, thumb2, t2),
+          RunFfmpegFrame(tempCompressed, thumb3, t3)
+      );
 
                 var bestThumb = thumb2;
 

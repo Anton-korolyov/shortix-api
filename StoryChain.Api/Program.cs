@@ -61,7 +61,7 @@ builder.Services.AddControllers();
 /////////////////////////////////////////////////////
 
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddHttpClient<PayPalService>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.AddSecurityDefinition("Bearer",
